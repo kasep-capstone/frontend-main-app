@@ -2,15 +2,14 @@
 
 import type * as React from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
-import { Home, Settings, Bell, User, ScanLine, Calculator } from "lucide-react"
-import { useTheme } from "next-themes"
+import { Home, ScanLine, Calculator } from "lucide-react"
 import { usePathname } from "next/navigation"
+import Link from "next/link"
 
 interface MenuItem {
   icon: React.ReactNode
   label: string
   href: string
-  iconColor: string
 }
 
 const menuItems: MenuItem[] = [
@@ -18,27 +17,22 @@ const menuItems: MenuItem[] = [
     icon: <Home className="h-5 w-5" strokeWidth={2} />,
     label: "Home",
     href: "/",
-    iconColor: "text-blue-500",
   },
   {
     icon: <ScanLine className="h-5 w-5" strokeWidth={2} />,
     label: "Snap",
     href: "/snap",
-    iconColor: "text-green-500",
   },
   {
     icon: <Calculator className="h-5 w-5" strokeWidth={2} />,
     label: "BMI",
     href: "/bmi",
-    iconColor: "text-orange-500",
   },
 ]
 
 export function MenuBar() {
-  const { theme } = useTheme()
   const { scrollY } = useScroll()
   const pathname = usePathname()
-  const isDarkTheme = theme === "dark"
   const y = useTransform(scrollY, [0, 100], [0, -20])
   const opacity = useTransform(scrollY, [0, 100], [1, 0.8])
 
@@ -56,11 +50,11 @@ export function MenuBar() {
             const isActive = pathname === item.href
             return (
               <motion.li key={item.label} className="relative">
-                <motion.a
+                <Link
                   href={item.href}
                   className={`flex items-center gap-2 px-4 py-2 relative z-10 bg-transparent transition-colors rounded-xl group`}
                 >
-                  <span className={`transition-colors duration-300 ${isActive ? '[&>svg]:stroke-[2.5px]' : 'text-muted-foreground'} group-hover:${item.iconColor}`}>
+                  <span className={`transition-colors duration-300 ${isActive ? '[&>svg]:stroke-[2.5px]' : 'text-muted-foreground'}`}>
                     {item.icon}
                   </span>
                   <span 
@@ -68,7 +62,7 @@ export function MenuBar() {
                   >
                     {item.label}
                   </span>
-                </motion.a>
+                </Link>
               </motion.li>
             )
           })}
