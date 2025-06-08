@@ -10,6 +10,7 @@ export default function SnapPage() {
   const [isCapturing, setIsCapturing] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
   const [isTooDark, setIsTooDark] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -81,6 +82,29 @@ export default function SnapPage() {
   };
 
   const handleCapture = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    
+    // Capture the current frame
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    
+    if (!context) return;
+    
+    // Set canvas size to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Draw current video frame to canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Convert canvas to image URL
+    const imageUrl = canvas.toDataURL('image/jpeg');
+    setCapturedImage(imageUrl);
+    
+    // Stop the camera
+    stopCamera();
+    
     setIsCapturing(true);
     isCancelled.current = false;
     
@@ -103,6 +127,7 @@ export default function SnapPage() {
     isCancelled.current = true;
     setIsCapturing(false);
     setShowCancel(false);
+    startCamera();
   };
 
   const handleGallery = () => {
@@ -214,10 +239,22 @@ export default function SnapPage() {
       {/* Capture Loading Animation */}
       {isCapturing && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+          {capturedImage && (
+            <div className="w-full h-auto m-8 rounded-lg overflow-hidden">
+              <img 
+                src={capturedImage} 
+                alt="Captured" 
+                className="w-full h-full object-cover"
+                style={{
+                  transform: isFrontCamera ? 'scaleX(-1)' : 'none'
+                }}
+              />
+            </div>
+          )}
           <div className="relative mb-8">
-            <div className="w-24 h-24 border-4 border-amber-600 rounded-full animate-spin" />
+            <div className="w-24 h-24 border-4 border-amber-600 rounded-full animate-pulse" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 bg-amber-600 rounded-full opacity-75" />
+              <div className="w-16 h-16 bg-amber-600 rounded-full animate-ping opacity-75" />
             </div>
           </div>
           <div className="text-center">
