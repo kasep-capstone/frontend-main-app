@@ -13,7 +13,14 @@ import {
   TrendingUp,
   ChevronLeft,
   ChevronRight,
+  Moon,
+  Sun,
+  Clock,
+  Utensils,
+  ArrowRight,
+  Calendar,
 } from 'lucide-react'
+import { ThemeToggle } from '@/components/themes/theme-toggle';
 
 const weeklyData = [
   { day: "Sun", calories: 1850, target: 2000, },
@@ -51,6 +58,50 @@ const radarConfig = {
     color: "#f59e0b",
   },
 }
+
+// Daily food history data
+const dailyFoodHistory = [
+  {
+    id: 1,
+    name: "Nasi Gudeg",
+    calories: 450,
+    time: "07:30",
+    category: "Sarapan",
+    image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=100&h=100&fit=crop&crop=center"
+  },
+  {
+    id: 2,
+    name: "Ayam Goreng",
+    calories: 320,
+    time: "12:15",
+    category: "Makan Siang",
+    image: "https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=100&h=100&fit=crop&crop=center"
+  },
+  {
+    id: 3,
+    name: "Gado-gado",
+    calories: 280,
+    time: "13:00",
+    category: "Makan Siang",
+    image: "https://images.unsplash.com/photo-1592417817098-8fd3d9eb14a5?w=100&h=100&fit=crop&crop=center"
+  },
+  {
+    id: 4,
+    name: "Pisang Goreng",
+    calories: 180,
+    time: "16:45",
+    category: "Snack",
+    image: "https://images.unsplash.com/photo-1587334207976-c8da06a3cc4e?w=100&h=100&fit=crop&crop=center"
+  },
+  {
+    id: 5,
+    name: "Soto Ayam",
+    calories: 290,
+    time: "19:20",
+    category: "Makan Malam",
+    image: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=100&h=100&fit=crop&crop=center"
+  }
+]
 
 // History data for different periods
 const weeklyHistory = [
@@ -97,7 +148,9 @@ const historyConfig = {
 export default function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = React.useState('week');
   const [currentSlide, setCurrentSlide] = React.useState(0);
-  
+  const [isDarkMode, setIsDarkMode] = React.useState(false);
+  const [imageErrors, setImageErrors] = React.useState<Record<number, boolean>>({});
+
   const periods = [
     { id: 'week', label: '1 Minggu', data: weeklyHistory, dataKey: 'day' },
     { id: 'month', label: '1 Bulan', data: monthlyHistory, dataKey: 'week' },
@@ -131,6 +184,31 @@ export default function Dashboard() {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+    // Toggle dark class on document element
+    document.documentElement.classList.toggle('dark');
+  };
+
+  // Initialize theme on component mount
+  React.useEffect(() => {
+    const isDark = localStorage.getItem('theme') === 'dark' ||
+      (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    setIsDarkMode(isDark);
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  // Save theme preference
+  React.useEffect(() => {
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
+
+  const handleImageError = (foodId: number) => {
+    setImageErrors(prev => ({ ...prev, [foodId]: true }));
+  };
+
   return (
     <>
       <MenuBarTop />
@@ -149,9 +227,8 @@ export default function Dashboard() {
                   <p className="text-muted-foreground">Let's check your progress</p>
                 </div>
               </div>
-              <button className="w-8 h-8 bg-muted/50 rounded-full flex items-center justify-center hover:bg-muted transition-colors">
-                <Settings className="w-4 h-4" />
-              </button>
+              {/* Dark/Light Mode Toggle */}
+              <ThemeToggle />
             </div>
           </div>
 
@@ -277,7 +354,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-                    {/* Horizontal Slider - Charts */}
+          {/* Horizontal Slider - Charts */}
           <Card className="mb-8">
             <CardHeader className="flex flex-row items-center justify-between">
               <div className="flex flex-col items-start">
@@ -304,10 +381,10 @@ export default function Dashboard() {
                 </button>
               </div>
             </CardHeader>
-            
+
             <CardContent className="pb-0">
               <div className="relative overflow-hidden">
-                <div 
+                <div
                   className="flex transition-transform duration-300 ease-in-out"
                   style={{ transform: `translateX(-${currentSlide * 100}%)` }}
                 >
@@ -341,11 +418,10 @@ export default function Dashboard() {
                           <button
                             key={period.id}
                             onClick={() => setSelectedPeriod(period.id)}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                              selectedPeriod === period.id
-                                ? 'bg-amber-600 text-white'
-                                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                            }`}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${selectedPeriod === period.id
+                              ? 'bg-amber-600 text-white'
+                              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                              }`}
                           >
                             {period.label}
                           </button>
@@ -375,21 +451,20 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Slide Indicators */}
               <div className="flex justify-center mt-4 gap-2">
                 {slides.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentSlide(index)}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      index === currentSlide ? 'bg-amber-600' : 'bg-muted'
-                    }`}
+                    className={`w-2 h-2 rounded-full transition-colors ${index === currentSlide ? 'bg-amber-600' : 'bg-muted'
+                      }`}
                   />
                 ))}
               </div>
             </CardContent>
-            
+
             <CardFooter className="flex-col gap-2 text-sm">
               <div className="flex items-center gap-2 leading-none font-medium">
                 {currentSlide === 0 && "Nasi paling sering dikonsumsi"}
@@ -408,7 +483,90 @@ export default function Dashboard() {
               </div>
             </CardFooter>
           </Card>
-          
+
+          {/* Daily Food History */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Utensils className="w-5 h-5 text-amber-600" />
+                History Makanan Hari Ini
+              </CardTitle>
+              <CardDescription>
+                Makanan yang telah di-scan dan dikonsumsi hari ini
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="">
+              <div className="space-y-3">
+                {dailyFoodHistory.map((food) => (
+                  <div key={food.id} className="flex items-center space-x-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                    {/* Food Image */}
+                    <div className="w-12 h-12 rounded-lg flex-shrink-0">
+                      {imageErrors[food.id] ? (
+                        <div className="w-full h-full bg-amber-100 rounded-lg flex items-center justify-center">
+                          <Utensils className="w-6 h-6 text-amber-600" />
+                        </div>
+                      ) : (
+                        <div className="w-full h-full rounded-lg overflow-hidden">
+                          <img
+                            src={food.image}
+                            alt={food.name}
+                            className="w-full h-full object-cover"
+                            onError={() => handleImageError(food.id)}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Food Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-sm truncate">{food.name}</h4>
+                        <span className="text-sm font-semibold text-amber-600">{food.calories} kcal</span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1">
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          {food.time}
+                        </div>
+                        <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full">
+                          {food.category}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Summary */}
+              <div className="mt-4 pt-4 border-t border-border">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Total Kalori Hari Ini</span>
+                  <span className="text-lg font-bold text-amber-600">
+                    {dailyFoodHistory.reduce((sum, food) => sum + food.calories, 0)} kcal
+                  </span>
+                </div>
+                <div className="flex justify-between items-center mt-1">
+                  <span className="text-xs text-muted-foreground">Target: 2000 kcal</span>
+                  <span className="text-xs text-muted-foreground">
+                    Sisa: {2000 - dailyFoodHistory.reduce((sum, food) => sum + food.calories, 0)} kcal
+                  </span>
+                </div>
+
+                {/* View Full History Button */}
+                <button className="w-full mt-4 px-4 py-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors group">
+                  <div className="flex items-center justify-center gap-2 text-amber-700">
+                    <Calendar className="w-4 h-4" />
+                    <span className="font-medium text-sm">Lihat History Lengkap</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                  <div className="text-xs text-amber-600 mt-1">
+                    Riwayat makanan minggu ini dan sebelumnya
+                  </div>
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
         </div>
       </div>
       <div className="flex justify-center pt-8">
