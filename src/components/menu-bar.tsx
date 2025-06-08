@@ -2,7 +2,7 @@
 
 import type * as React from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
-import { Home, ScanLine, Calculator } from "lucide-react"
+import { Home, ScanLine, Calculator, HistoryIcon } from "lucide-react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 
@@ -24,10 +24,15 @@ const menuItems: MenuItem[] = [
     href: "/snap",
   },
   {
+    icon: <HistoryIcon className="h-5 w-5" strokeWidth={2} />,
+    label: "History",
+    href: "/history",
+  },
+  {
     icon: <Calculator className="h-5 w-5" strokeWidth={2} />,
     label: "BMI",
     href: "/bmi",
-  },
+  }
 ]
 
 export function MenuBar() {

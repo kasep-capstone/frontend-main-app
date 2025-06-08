@@ -7,12 +7,16 @@ interface DailyFoodHistoryProps {
   dailyFoodHistory: DailyFood[];
   imageErrors: Record<number, boolean>;
   onImageError: (foodId: number) => void;
+  onViewHistory?: () => void;
+  onFoodClick?: (food: DailyFood) => void;
 }
 
 export function DailyFoodHistory({ 
   dailyFoodHistory, 
   imageErrors, 
-  onImageError 
+  onImageError,
+  onViewHistory,
+  onFoodClick
 }: DailyFoodHistoryProps) {
   const totalCalories = dailyFoodHistory.reduce((sum, food) => sum + food.calories, 0);
   const targetCalories = 2000;
@@ -32,7 +36,11 @@ export function DailyFoodHistory({
       <CardContent className="">
         <div className="space-y-3">
           {dailyFoodHistory.map((food) => (
-            <div key={food.id} className="flex items-center space-x-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+            <div 
+              key={food.id} 
+              className="flex items-center space-x-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+              onClick={() => onFoodClick?.(food)}
+            >
               {/* Food Image */}
               <div className="w-12 h-12 rounded-lg flex-shrink-0">
                 {imageErrors[food.id] ? (
@@ -87,7 +95,10 @@ export function DailyFoodHistory({
           </div>
 
           {/* View Full History Button */}
-          <button className="w-full mt-4 px-4 py-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors group">
+          <button 
+            onClick={onViewHistory}
+            className="w-full mt-4 px-4 py-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors group"
+          >
             <div className="flex items-center justify-center gap-2 text-amber-700">
               <Calendar className="w-4 h-4" />
               <span className="font-medium text-sm">Lihat History Lengkap</span>

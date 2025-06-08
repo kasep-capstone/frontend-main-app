@@ -2,6 +2,7 @@
 
 import React from 'react'
 import confetti from 'canvas-confetti'
+import { useRouter } from 'next/navigation'
 import { MenuBar } from '@/components/menu-bar';
 import { MenuBarTop } from '@/components/menu-bar-top';
 import { ProfileSection } from '@/components/dashboard/profile-section';
@@ -9,6 +10,7 @@ import { DailyCalorieCharts } from '@/components/dashboard/daily-calorie-charts'
 import { HorizontalSlider } from '@/components/dashboard/horizontal-slider';
 import { DailyFoodHistory } from '@/components/dashboard/daily-food-history';
 import { WeeklyCalorieBenchmark } from '@/components/dashboard/weekly-calorie-benchmark';
+import { DailyFood } from '@/types/dashboard';
 import {
   weeklyData,
   foodData,
@@ -20,6 +22,7 @@ import {
 
 
 export default function Dashboard() {
+  const router = useRouter();
   const [selectedPeriod, setSelectedPeriod] = React.useState('week');
   const [currentSlide, setCurrentSlide] = React.useState(0);
   const [imageErrors, setImageErrors] = React.useState<Record<number, boolean>>({});
@@ -39,6 +42,14 @@ export default function Dashboard() {
 
   const handleConfettiTriggered = () => {
     setHasTriggeredConfetti(true);
+  };
+
+  const handleViewHistory = () => {
+    router.push('/history');
+  };
+
+  const handleFoodClick = (food: DailyFood) => {
+    router.push(`/history/${food.id}`);
   };
 
   return (
@@ -66,6 +77,8 @@ export default function Dashboard() {
             dailyFoodHistory={dailyFoodHistory}
             imageErrors={imageErrors}
             onImageError={handleImageError}
+            onViewHistory={handleViewHistory}
+            onFoodClick={handleFoodClick}
           />
           
           <WeeklyCalorieBenchmark

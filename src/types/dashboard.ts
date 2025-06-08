@@ -9,13 +9,28 @@ export interface FoodData {
   konsumsi: number;
 }
 
+interface RecipeStep {
+  instruction: string;
+  image: string[];
+}
+
 export interface DailyFood {
   id: number;
   name: string;
   calories: number;
   time: string;
+  date: string; // Format: YYYY-MM-DD
   category: string;
   image: string;
+  // Extended recipe data
+  description?: string;
+  usedMaterial?: string[];
+  unusedMaterial?: string[];
+  missingMaterial?: string[];
+  material?: string[];
+  step?: RecipeStep[];
+  mainImage?: string;
+  capturedImage?: string; // Image that was snapped/captured
 }
 
 export interface HistoryData {
