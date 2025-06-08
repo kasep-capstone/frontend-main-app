@@ -1,19 +1,18 @@
 'use client'
 
 import React from 'react'
+import confetti from 'canvas-confetti'
 import { MenuBar } from '@/components/menu-bar';
 import { MenuBarTop } from '@/components/menu-bar-top';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart"
-import { RadialBarChart, RadialBar, PieChart, Pie, Cell, Label, PolarGrid, PolarRadiusAxis, LabelList, PolarAngleAxis, Radar, RadarChart, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { RadialBarChart, RadialBar, Label, PolarGrid, PolarRadiusAxis, LabelList, PolarAngleAxis, Radar, RadarChart, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
 import {
   User,
-  Settings,
   Activity,
   TrendingUp,
   ChevronLeft,
   ChevronRight,
-  Moon,
   Sun,
   Clock,
   Utensils,
@@ -150,6 +149,35 @@ export default function Dashboard() {
   const [currentSlide, setCurrentSlide] = React.useState(0);
   const [isDarkMode, setIsDarkMode] = React.useState(false);
   const [imageErrors, setImageErrors] = React.useState<Record<number, boolean>>({});
+  const [hasTriggeredConfetti, setHasTriggeredConfetti] = React.useState(false);
+  const benchmarkRef = React.useRef<HTMLDivElement>(null);
+  const [benchmarkElement, setBenchmarkElement] = React.useState<HTMLDivElement | null>(null);
+
+  // Callback ref to ensure we capture the element
+  const benchmarkCallbackRef = React.useCallback((node: HTMLDivElement | null) => {
+    console.log('Callback ref called with:', node); // Debug log
+    console.log('Node type:', node ? node.nodeName : 'null'); // Debug log
+    console.log('Node classes:', node ? node.className : 'null'); // Debug log
+    if (node) {
+      setBenchmarkElement(node);
+      console.log('benchmarkElement set successfully'); // Debug log
+    }
+  }, []);
+
+  // Test confetti on component mount (for debugging)
+  React.useEffect(() => {
+    console.log('Component mounted, confetti available:', typeof confetti);
+    // Auto trigger confetti after 3 seconds as fallback
+    const autoTriggerTimer = setTimeout(() => {
+      if (!hasTriggeredConfetti) {
+        console.log('Auto-triggering confetti as fallback');
+        triggerConfetti();
+        setHasTriggeredConfetti(true);
+      }
+    }, 3000);
+
+    return () => clearTimeout(autoTriggerTimer);
+  }, []);
 
   const periods = [
     { id: 'week', label: '1 Minggu', data: weeklyHistory, dataKey: 'day' },
@@ -205,6 +233,66 @@ export default function Dashboard() {
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
 
+  // Confetti function
+  const triggerConfetti = () => {
+    console.log('Triggering confetti!'); // Debug log
+
+    // Multiple confetti bursts for better effect
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444', '#f97316']
+    });
+
+    // Second burst with slight delay
+    setTimeout(() => {
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.7 },
+        colors: ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444', '#f97316']
+      });
+    }, 200);
+  };
+
+  // Scroll detection for benchmark component
+  React.useEffect(() => {
+    if (!benchmarkElement) {
+      console.log('benchmarkElement not available yet'); // Debug log
+      return;
+    }
+
+    console.log('Setting up intersection observer for benchmarkElement'); // Debug log
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          console.log('Intersection detected:', entry.isIntersecting, 'hasTriggered:', hasTriggeredConfetti); // Debug log
+
+          if (entry.isIntersecting && !hasTriggeredConfetti) {
+            console.log('Conditions met, triggering confetti'); // Debug log
+            triggerConfetti();
+            setHasTriggeredConfetti(true);
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '0px 0px 0px 0px'
+      }
+    );
+
+    observer.observe(benchmarkElement);
+    console.log('Observer attached successfully to benchmarkElement'); // Debug log
+
+    return () => {
+      observer.unobserve(benchmarkElement);
+      observer.disconnect();
+      console.log('Observer cleaned up'); // Debug log
+    };
+  }, [benchmarkElement, hasTriggeredConfetti]);
+
   const handleImageError = (foodId: number) => {
     setImageErrors(prev => ({ ...prev, [foodId]: true }));
   };
@@ -212,7 +300,7 @@ export default function Dashboard() {
   return (
     <>
       <MenuBarTop />
-      <div className="min-h-screen bg-background pt-16 pb-20">
+      <div className="bg-background pt-16">
         <div className="max-w-md mx-auto px-4">
 
           {/* Profile Section */}
@@ -567,9 +655,187 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
+          {/* Weekly Calorie Benchmark */}
+          <div ref={benchmarkCallbackRef}>
+            <Card className="mb-6 overflow-hidden relative">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-amber-600" />
+                  Benchmark Kalori Minggu Ini
+                  {/* Test button for confetti */}
+                  <button
+                    onClick={() => {
+                      console.log('Manual confetti trigger');
+                      triggerConfetti();
+                    }}
+                    className="ml-2 px-2 py-1 text-xs bg-amber-100 hover:bg-amber-200 rounded text-amber-700"
+                  >
+                    🎉
+                  </button>
+                </CardTitle>
+                <CardDescription>
+                  Performa kalori harian vs target mingguan
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent>
+                {/* Weekly Stats */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="text-center p-3 bg-amber-50 rounded-lg">
+                    <div className="text-2xl font-bold text-amber-600">
+                      {weeklyData.reduce((sum, day) => sum + day.calories, 0)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Total Kalori</div>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
+                      {weeklyData.reduce((sum, day) => sum + day.target, 0)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Target Kalori</div>
+                  </div>
+                  <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {Math.round((weeklyData.reduce((sum, day) => sum + day.calories, 0) / weeklyData.reduce((sum, day) => sum + day.target, 0)) * 100)}%
+                    </div>
+                    <div className="text-xs text-muted-foreground">Achievement</div>
+                  </div>
+                </div>
+
+                {/* Character Animation */}
+                <div className="relative mb-6 h-32 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl overflow-hidden">
+                  {/* Background decorations */}
+                  <div className="absolute inset-0">
+                    {/* Floating food icons */}
+                    <div className="absolute top-4 left-4 text-orange-300 animate-bounce" style={{ animationDelay: '0s' }}>🍎</div>
+                    <div className="absolute top-8 right-8 text-green-300 animate-bounce" style={{ animationDelay: '0.5s' }}>🥗</div>
+                    <div className="absolute bottom-6 left-8 text-red-300 animate-bounce" style={{ animationDelay: '1s' }}>🍅</div>
+                    <div className="absolute bottom-4 right-12 text-yellow-300 animate-bounce" style={{ animationDelay: '1.5s' }}>🌽</div>
+                  </div>
+
+                  {/* Main Character */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <div className="relative">
+                      {/* Character Body */}
+                      <div className="w-16 h-16 bg-amber-400 rounded-full relative animate-pulse">
+                        {/* Eyes */}
+                        <div className="absolute top-4 left-3 w-2 h-2 bg-white rounded-full">
+                          <div className="w-1 h-1 bg-black rounded-full ml-0.5 mt-0.5"></div>
+                        </div>
+                        <div className="absolute top-4 right-3 w-2 h-2 bg-white rounded-full">
+                          <div className="w-1 h-1 bg-black rounded-full ml-0.5 mt-0.5"></div>
+                        </div>
+
+                        {/* Mouth */}
+                        {Math.round((weeklyData.reduce((sum, day) => sum + day.calories, 0) / weeklyData.reduce((sum, day) => sum + day.target, 0)) * 100) >= 80 ? (
+                          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-6 h-3 border-2 border-black border-t-0 rounded-b-full bg-pink-200"></div>
+                        ) : (
+                          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-4 h-2 border-2 border-black border-b-0 rounded-t-full"></div>
+                        )}
+
+                        {/* Cheeks */}
+                        <div className="absolute top-6 left-1 w-3 h-2 bg-pink-300 rounded-full opacity-60"></div>
+                        <div className="absolute top-6 right-1 w-3 h-2 bg-pink-300 rounded-full opacity-60"></div>
+                      </div>
+
+                      {/* Arms */}
+                      <div className="absolute top-8 -left-4 w-6 h-2 bg-amber-400 rounded-full transform rotate-45 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="absolute top-8 -right-4 w-6 h-2 bg-amber-400 rounded-full transform -rotate-45 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+
+                      {/* Achievement Badge */}
+                      {Math.round((weeklyData.reduce((sum, day) => sum + day.calories, 0) / weeklyData.reduce((sum, day) => sum + day.target, 0)) * 100) >= 80 && (
+                        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                          <div className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold animate-bounce">
+                            🎉 Great!
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Party Pop Animation */}
+                  {Math.round((weeklyData.reduce((sum, day) => sum + day.calories, 0) / weeklyData.reduce((sum, day) => sum + day.target, 0)) * 100) >= 80 && (
+                    <>
+                      {/* Confetti */}
+                      <div className="absolute top-2 left-8 w-2 h-2 bg-red-400 rounded-full animate-ping" style={{ animationDelay: '0s' }}></div>
+                      <div className="absolute top-4 right-12 w-2 h-2 bg-blue-400 rounded-full animate-ping" style={{ animationDelay: '0.3s' }}></div>
+                      <div className="absolute top-8 left-16 w-2 h-2 bg-green-400 rounded-full animate-ping" style={{ animationDelay: '0.6s' }}></div>
+                      <div className="absolute top-6 right-20 w-2 h-2 bg-purple-400 rounded-full animate-ping" style={{ animationDelay: '0.9s' }}></div>
+                      <div className="absolute bottom-8 left-12 w-2 h-2 bg-pink-400 rounded-full animate-ping" style={{ animationDelay: '1.2s' }}></div>
+                      <div className="absolute bottom-4 right-16 w-2 h-2 bg-yellow-400 rounded-full animate-ping" style={{ animationDelay: '1.5s' }}></div>
+                    </>
+                  )}
+                </div>
+
+                {/* Daily Progress Bars */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-sm text-muted-foreground mb-3">Progress Harian</h4>
+                  {weeklyData.map((day, index) => {
+                    const percentage = Math.min((day.calories / day.target) * 100, 100);
+                    const isToday = index === 4; // Thursday as example current day
+
+                    return (
+                      <div key={day.day} className={`p-3 rounded-lg ${isToday ? 'bg-amber-50 border border-amber-200' : 'bg-muted/30'}`}>
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-medium ${isToday ? 'text-amber-700' : 'text-foreground'}`}>
+                              {day.day}
+                            </span>
+                            {isToday && <span className="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full">Hari Ini</span>}
+                          </div>
+                          <div className="text-right">
+                            <span className="text-sm font-semibold">{day.calories}</span>
+                            <span className="text-xs text-muted-foreground">/{day.target} kcal</span>
+                          </div>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all duration-500 ${percentage >= 100 ? 'bg-green-500' :
+                                percentage >= 80 ? 'bg-amber-500' :
+                                  percentage >= 60 ? 'bg-yellow-500' : 'bg-red-400'
+                              }`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+
+                        <div className="flex justify-between items-center mt-1">
+                          <span className="text-xs text-muted-foreground">
+                            {percentage.toFixed(0)}% dari target
+                          </span>
+                          {percentage >= 100 && <span className="text-xs">🎯</span>}
+                          {percentage >= 80 && percentage < 100 && <span className="text-xs">👍</span>}
+                          {percentage < 60 && <span className="text-xs">💪</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Weekly Summary */}
+                <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg">
+                  <h4 className="font-medium text-sm mb-2">Ringkasan Minggu Ini</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Hari Tercapai:</span>
+                      <span className="ml-2 font-semibold text-green-600">
+                        {weeklyData.filter(day => day.calories >= day.target * 0.8).length}/7 hari
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Rata-rata:</span>
+                      <span className="ml-2 font-semibold text-amber-600">
+                        {Math.round(weeklyData.reduce((sum, day) => sum + day.calories, 0) / weeklyData.length)} kcal/hari
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-      <div className="flex justify-center pt-8">
+      <div className="flex justify-center mt-36">
         <MenuBar />
       </div>
     </>

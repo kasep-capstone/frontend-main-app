@@ -7,9 +7,6 @@ export default function Home() {
     <>
       <MenuBarTop />
       <Dashboard />
-      <div className="flex justify-center items-center h-screen">
-        <MenuBar />
-      </div>
     </>
   );
 }
