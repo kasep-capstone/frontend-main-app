@@ -369,7 +369,7 @@ export default function BmiPage() {
           {/* Header */}
           <div className="mb-6">
             <div className="flex items-center space-x-3 mb-2">
-              <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
                 <Calculator className="w-6 h-6 text-amber-600" />
               </div>
               <div className="flex-1">
@@ -382,7 +382,7 @@ export default function BmiPage() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center shadow-lg"
+                  className="relative w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center"
                 >
                   <History className="w-6 h-6 text-amber-600" />
                   {historyCount > 0 && (
