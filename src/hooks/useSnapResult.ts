@@ -8,7 +8,11 @@ interface RecipeStep {
 interface Recipe {
   title: string;
   mainImage: string;
-  calories: number;
+  calories: number; // calories per serving
+  totalCalories: number; // total calories for all servings
+  duration: number; // cooking time in minutes
+  prepTime: number; // preparation time in minutes
+  servings: number; // number of servings
   usedMaterial: string[];
   unusedMaterial: string[];
   missingMaterial: string[];
@@ -49,7 +53,11 @@ export const useSnapResult = () => {
         {
           title: "soto ayam",
           mainImage: "https://images.unsplash.com/photo-1563379926898-05f4575a45d8?q=80&w=2070&auto=format&fit=crop",
-          calories: 1500,
+          calories: 275,
+          totalCalories: 1100,
+          duration: 45,
+          prepTime: 15,
+          servings: 4,
           usedMaterial: ["bawang merah", "bawang putih"],
           unusedMaterial: ["merica", "garam"],
           missingMaterial: ["gula", "jeruk purut"],
@@ -75,7 +83,11 @@ export const useSnapResult = () => {
         {
           title: "sop ayam",
           mainImage: "https://images.unsplash.com/photo-1547592166-23ac45744acd?q=80&w=2071&auto=format&fit=crop",
-          calories: 1500,
+          calories: 220,
+          totalCalories: 660,
+          duration: 30,
+          prepTime: 10,
+          servings: 3,
           usedMaterial: ["bawang merah", "bawang putih"],
           unusedMaterial: ["merica", "garam"],
           missingMaterial: ["gula", "jeruk purut"],

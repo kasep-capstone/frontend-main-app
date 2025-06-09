@@ -16,7 +16,7 @@ export const RetrySection: React.FC<RetrySectionProps> = ({
       </p>
       <Button 
         onClick={onRetryDetection}
-        className="flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white transition-all duration-300 hover:scale-[1.02]"
+        className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white transition-all duration-300 hover:scale-[1.02] shadow-lg"
       >
         <Camera className="w-4 h-4" />
         Deteksi Ulang Bahan

@@ -14,8 +14,8 @@ export const BrightnessAlert: React.FC<BrightnessAlertProps> = ({
   if (!isTooDark || isLoading || isCapturing) return null;
 
   return (
-    <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-20 bg-red-600/90 text-white px-4 py-2 rounded-lg shadow-lg">
-      Preview terlalu gelap! Pastikan pencahayaan cukup.
+    <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-20 bg-destructive/90 backdrop-blur-sm text-destructive-foreground px-4 py-3 rounded-xl border border-destructive/20 shadow-lg">
+      <p className="text-sm font-medium">Preview terlalu gelap! Pastikan pencahayaan cukup.</p>
     </div>
   );
 }; 

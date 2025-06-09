@@ -44,7 +44,7 @@ export default function SnapPage() {
   };
 
   return (
-    <div className="relative w-full h-screen bg-black overflow-hidden">
+    <div className="relative w-full h-screen bg-background overflow-hidden">
       {/* Hidden canvas for brightness detection */}
       <canvas ref={canvasRef} className="hidden" />
       

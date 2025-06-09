@@ -16,7 +16,11 @@ import {
 interface Recipe {
   title: string;
   mainImage: string;
-  calories: number;
+  calories: number; // calories per serving
+  totalCalories: number; // total calories for all servings
+  duration: number; // cooking time in minutes
+  prepTime: number; // preparation time in minutes
+  servings: number; // number of servings
   usedMaterial: string[];
   unusedMaterial: string[];
   missingMaterial: string[];
@@ -45,7 +49,7 @@ export default function SnapResult() {
     <>
       <MenuBarTop />
       <div className={`min-h-screen bg-background pt-16 pb-20 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="max-w-md mx-auto px-4">
+        <div className="max-w-md mx-auto px-3 sm:px-4">
           {snapResult ? (
             <>
               {/* Captured Image Preview */}
