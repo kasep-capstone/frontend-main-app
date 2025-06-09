@@ -18,6 +18,7 @@ export default function SnapPage() {
     isFlashOn,
     isFrontCamera,
     isLoading,
+    flashSupported,
     videoRef,
     startCamera,
     stopCamera,
@@ -32,11 +33,20 @@ export default function SnapPage() {
     showCancel,
     capturedImage,
     handleCapture,
+    handleUpload,
     handleCancelCapture,
   } = useCaptureProcess(videoRef, canvasRef, isFrontCamera, stopCamera, startCamera);
 
-  const handleGallery = () => {
-    console.log('Open gallery');
+  const handleImageUpload = async (file: File) => {
+    // Convert file to data URL (same format as capture)
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const imageUrl = e.target?.result as string;
+      
+      // Use the same upload process as capture
+      handleUpload(imageUrl);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleBack = () => {
@@ -78,6 +88,7 @@ export default function SnapPage() {
       <TopControls
         isLoading={isLoading}
         isFlashOn={isFlashOn}
+        flashSupported={flashSupported}
         onToggleFlash={toggleFlash}
         onToggleCamera={toggleCamera}
       />
@@ -87,7 +98,7 @@ export default function SnapPage() {
         isLoading={isLoading}
         isCapturing={isCapturing}
         isTooDark={isTooDark}
-        onGallery={handleGallery}
+        onImageUpload={handleImageUpload}
         onCapture={handleCapture}
         onBack={handleBack}
       />

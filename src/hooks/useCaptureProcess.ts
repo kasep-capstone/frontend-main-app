@@ -74,6 +74,31 @@ export const useCaptureProcess = (
     }
   };
 
+  const handleUpload = async (imageUrl: string) => {
+    // Set the uploaded image as captured image
+    setCapturedImage(imageUrl);
+    
+    // Stop the camera
+    stopCamera();
+    
+    setIsCapturing(true);
+    isCancelled.current = false;
+    
+    try {
+      // Same backend processing time as capture
+      await new Promise(resolve => setTimeout(resolve, 10000));
+      
+      // Only navigate if not cancelled
+      if (!isCancelled.current) {
+        router.push('/snap/result');
+      }
+    } catch (error) {
+      console.error('Error during upload analysis:', error);
+    } finally {
+      setIsCapturing(false);
+    }
+  };
+
   const handleCancelCapture = () => {
     isCancelled.current = true;
     setIsCapturing(false);
@@ -86,6 +111,7 @@ export const useCaptureProcess = (
     showCancel,
     capturedImage,
     handleCapture,
+    handleUpload,
     handleCancelCapture,
   };
 }; 
