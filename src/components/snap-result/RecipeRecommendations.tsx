@@ -1,36 +1,9 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { RecipeCard } from '@/components/recipe-card';
-import { SnapResult } from '@/hooks/useSnapResult';
+import { Recipe, SnapResult, RecipeRecommendationsProps } from '@/types';
 
-interface Recipe {
-  title: string;
-  mainImage: string;
-  calories: number; // calories per serving
-  totalCalories: number; // total calories for all servings
-  duration: number; // cooking time in minutes
-  prepTime: number; // preparation time in minutes
-  servings: number; // number of servings
-  usedMaterial: string[];
-  unusedMaterial: string[];
-  missingMaterial: string[];
-  material: string[];
-  description: string;
-  step: any[];
-}
-
-interface RecipeRecommendationsProps {
-  snapResult: SnapResult;
-  currentIndex: number;
-  showNavButtons: boolean;
-  scrollContainerRef: React.RefObject<HTMLDivElement>;
-  showDetails: boolean;
-  onShowDetailsChange: (show: boolean) => void;
-  onRecipeSelect: (recipe: Recipe) => void;
-  onScrollToRecipe: (direction: 'left' | 'right') => void;
-}
-
-export const RecipeRecommendations: React.FC<RecipeRecommendationsProps> = ({
+export function RecipeRecommendations({
   snapResult,
   currentIndex,
   showNavButtons,
@@ -39,71 +12,61 @@ export const RecipeRecommendations: React.FC<RecipeRecommendationsProps> = ({
   onShowDetailsChange,
   onRecipeSelect,
   onScrollToRecipe,
-}) => {
+}: RecipeRecommendationsProps) {
   return (
-    <div className="relative">
-      {/* Header with Navigation */}
-      <div className="mb-6 sm:mb-8 flex items-center justify-between">
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Rekomendasi Resep</h1>
-        <div className="flex items-center gap-2 sm:gap-3">
+    <div className="relative mb-24">
+      <div 
+        ref={scrollContainerRef}
+        className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
+        style={{ scrollSnapType: 'x mandatory' }}
+      >
+        {snapResult.receipts.map((recipe, index) => (
+          <div key={index} className="min-w-full snap-center">
+            <RecipeCard
+              recipe={recipe}
+              onSelect={onRecipeSelect}
+              showDetails={showDetails}
+              onShowDetailsChange={onShowDetailsChange}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Navigation Buttons */}
+      {showNavButtons && snapResult.receipts.length > 1 && (
+        <>
           <button
             onClick={() => onScrollToRecipe('left')}
+            className="fixed left-4 top-1/2 transform -translate-y-1/2 z-50 bg-primary hover:bg-primary/90 text-white rounded-full p-3 shadow-lg transition-all duration-300 hover:scale-110"
             disabled={currentIndex === 0}
-            className="p-2 sm:p-2.5 rounded-full bg-card/80 backdrop-blur-sm border border-border/40 text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:bg-card hover:scale-110 shadow-sm"
           >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            <ChevronLeft className="w-6 h-6" />
           </button>
           <button
             onClick={() => onScrollToRecipe('right')}
+            className="fixed right-4 top-1/2 transform -translate-y-1/2 z-50 bg-primary hover:bg-primary/90 text-white rounded-full p-3 shadow-lg transition-all duration-300 hover:scale-110"
             disabled={currentIndex === snapResult.receipts.length - 1}
-            className="p-2 sm:p-2.5 rounded-full bg-card/80 backdrop-blur-sm border border-border/40 text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:bg-card hover:scale-110 shadow-sm"
           >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            <ChevronRight className="w-6 h-6" />
           </button>
-        </div>
-      </div>
+        </>
+      )}
 
-      {/* Fixed Navigation Buttons on Scroll */}
-      <div className={`fixed top-1/2 -translate-y-1/2 left-4 right-4 z-50 flex justify-between pointer-events-none transition-opacity duration-300 ${showNavButtons ? 'opacity-100' : 'opacity-0'}`}>
-        <button
-          onClick={() => onScrollToRecipe('left')}
-          disabled={currentIndex === 0}
-          className="p-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto transform hover:scale-110 transition-all duration-300"
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-        <button
-          onClick={() => onScrollToRecipe('right')}
-          disabled={currentIndex === snapResult.receipts.length - 1}
-          className="p-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto transform hover:scale-110 transition-all duration-300"
-        >
-          <ChevronRight className="w-6 h-6" />
-        </button>
-      </div>
-
-      {/* Recipe Cards Container */}
-      <div 
-        ref={scrollContainerRef}
-        className="relative w-full overflow-x-hidden"
-      >
-        <div className="flex transition-transform duration-300 ease-in-out">
-          {snapResult.receipts.map((recipe, index) => (
-            <div 
-              key={index}
-              className="w-full flex-shrink-0 px-1 sm:px-2"
-            >
-              <div className="w-full">
-                <RecipeCard
-                  recipe={recipe}
-                  onSelect={onRecipeSelect}
-                  showDetails={showDetails}
-                  onShowDetailsChange={onShowDetailsChange}
-                />
-              </div>
-            </div>
-          ))}
+      {/* Recipe Indicator */}
+      {snapResult.receipts.length > 1 && (
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 bg-background/80 backdrop-blur-sm rounded-full px-4 py-2 border border-border/40">
+          <div className="flex items-center gap-2">
+            {snapResult.receipts.map((_, index) => (
+              <div
+                key={index}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  index === currentIndex ? 'bg-primary' : 'bg-muted-foreground/30'
+                }`}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
-}; 
+} 

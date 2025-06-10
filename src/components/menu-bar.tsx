@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform } from "framer-motion"
 import { Home, ScanLine, Calculator, HistoryIcon } from "lucide-react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
+import { ROUTES } from "@/constants"
 
 interface MenuItem {
   icon: React.ReactNode
@@ -16,22 +17,22 @@ const menuItems: MenuItem[] = [
   {
     icon: <Home className="h-5 w-5" strokeWidth={2} />,
     label: "Home",
-    href: "/",
+    href: ROUTES.HOME,
   },
   {
     icon: <ScanLine className="h-5 w-5" strokeWidth={2} />,
     label: "Snap",
-    href: "/snap",
+    href: ROUTES.SNAP,
   },
   {
     icon: <HistoryIcon className="h-5 w-5" strokeWidth={2} />,
     label: "History",
-    href: "/history",
+    href: ROUTES.HISTORY,
   },
   {
     icon: <Calculator className="h-5 w-5" strokeWidth={2} />,
     label: "BMI",
-    href: "/bmi",
+    href: ROUTES.BMI,
   }
 ]
 

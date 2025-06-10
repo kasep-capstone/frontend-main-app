@@ -1,3 +1,5 @@
+import { RecipeStep } from './recipe';
+
 export interface DayData {
   day: string;
   calories: number;
@@ -7,11 +9,6 @@ export interface DayData {
 export interface FoodData {
   bahan: string;
   konsumsi: number;
-}
-
-interface RecipeStep {
-  instruction: string;
-  image: string[];
 }
 
 export interface DailyFood {

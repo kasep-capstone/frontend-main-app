@@ -2,67 +2,47 @@ import React from 'react';
 import Image from 'next/image';
 import { Button } from './ui/button';
 import { ArrowLeft, Clock, Users, ChefHat } from 'lucide-react';
-
-interface RecipeStep {
-  instruction: string;
-  image: string[];
-}
-
-interface Recipe {
-  title: string;
-  mainImage: string;
-  calories: number;
-  usedMaterial: string[];
-  unusedMaterial: string[];
-  missingMaterial: string[];
-  material: string[];
-  description: string;
-  step: RecipeStep[];
-}
-
-interface RecipeDetailProps {
-  recipe: Recipe;
-  onBack: () => void;
-}
+import { Recipe, RecipeDetailProps } from '@/types';
 
 export function RecipeDetail({ recipe, onBack }: RecipeDetailProps) {
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <div className="relative h-80 w-full">
-        <Image
-          src={recipe.mainImage}
-          alt={recipe.title}
-          fill
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+      {/* Header */}
+      <div className="relative">
+        <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+            className="h-10 w-10 rounded-full bg-background/80 hover:bg-background/90 backdrop-blur-sm"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </div>
         
-        {/* Back Button */}
-        <Button
-          onClick={onBack}
-          variant="ghost"
-          className="absolute top-4 left-4 bg-black/30 hover:bg-black/50 text-white"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Kembali
-        </Button>
-
-        {/* Recipe Title and Info */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-          <h1 className="text-3xl font-bold mb-3">{recipe.title}</h1>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              <span className="text-sm">30 menit</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Users className="w-4 h-4" />
-              <span className="text-sm">4 porsi</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <ChefHat className="w-4 h-4" />
-              <span className="text-sm">Mudah</span>
+        <div className="relative h-80 w-full">
+          <Image
+            src={recipe.mainImage}
+            alt={recipe.title}
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-6">
+            <h1 className="text-3xl font-bold text-white mb-2">{recipe.title}</h1>
+            <div className="flex items-center gap-4 text-white/90">
+              <div className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                <span className="text-sm">30 min</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                <span className="text-sm">4 porsi</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <ChefHat className="h-4 w-4" />
+                <span className="text-sm">{recipe.calories} cal</span>
+              </div>
             </div>
           </div>
         </div>

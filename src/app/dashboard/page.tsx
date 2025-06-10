@@ -17,7 +17,7 @@ import {
   dailyFoodHistory,
   periods,
   slides
-} from '@/data/dashboard-data';
+} from '@/constants/dashboard-data';
 
 
 

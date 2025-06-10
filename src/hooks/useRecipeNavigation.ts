@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { SnapResult } from './useSnapResult';
+import { SnapResult } from '@/types';
 
 export const useRecipeNavigation = (snapResult: SnapResult | null) => {
   const [currentIndex, setCurrentIndex] = useState(0);

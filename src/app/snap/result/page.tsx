@@ -5,6 +5,8 @@ import { MenuBar } from '@/components/menu-bar';
 import { MenuBarTop } from '@/components/menu-bar-top';
 import ImagePopup from '@/components/image-popup';
 import { useSnapResult, useRecipeNavigation } from '@/hooks';
+import { Recipe } from '@/types';
+import { ROUTES, STORAGE_KEYS } from '@/constants';
 import {
   CapturedImagePreview,
   DetectedMaterials,
@@ -13,87 +15,81 @@ import {
   LoadingState
 } from '@/components/snap-result';
 
-interface Recipe {
-  title: string;
-  mainImage: string;
-  calories: number; // calories per serving
-  totalCalories: number; // total calories for all servings
-  duration: number; // cooking time in minutes
-  prepTime: number; // preparation time in minutes
-  servings: number; // number of servings
-  usedMaterial: string[];
-  unusedMaterial: string[];
-  missingMaterial: string[];
-  material: string[];
-  description: string;
-  step: any[];
-}
-
-export default function SnapResult() {
+export default function SnapResultPage() {
   const router = useRouter();
-  const { snapResult, isVisible } = useSnapResult();
+  const { snapResult, isLoading } = useSnapResult();
   const { currentIndex, showNavButtons, scrollContainerRef, scrollToRecipe } = useRecipeNavigation(snapResult);
   
   const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
   const [showDetails, setShowDetails] = useState(false);
 
   const handleRecipeSelect = (recipe: Recipe) => {
-    console.log('Selected recipe:', recipe);
+    // Store selected recipe in localStorage
+    localStorage.setItem(STORAGE_KEYS.SELECTED_RECIPE, JSON.stringify(recipe));
+    router.push(ROUTES.RECIPE_DETAIL);
   };
 
-  const handleRetryDetection = () => {
-    router.push('/snap');
+  const handleRetry = () => {
+    router.push(ROUTES.SNAP);
   };
 
-  return (
-    <>
-      <MenuBarTop />
-      <div className={`min-h-screen bg-background pt-16 pb-20 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="max-w-md mx-auto px-3 sm:px-4">
-          {snapResult ? (
-            <>
-              {/* Captured Image Preview */}
-              <CapturedImagePreview
-                imageUrl={snapResult.snaped}
-                onImageClick={setSelectedImage}
-              />
+  if (isLoading) {
+    return <LoadingState />;
+  }
 
-              {/* Detected Materials */}
-              <DetectedMaterials
-                materials={snapResult.material_detected}
-              />
-
-              {/* Recipe Recommendations */}
-              <RecipeRecommendations
-                snapResult={snapResult}
-                currentIndex={currentIndex}
-                showNavButtons={showNavButtons}
-                scrollContainerRef={scrollContainerRef}
-                showDetails={showDetails}
-                onShowDetailsChange={setShowDetails}
-                onRecipeSelect={handleRecipeSelect}
-                onScrollToRecipe={scrollToRecipe}
-              />
-
-              {/* Retry Section */}
-              <RetrySection onRetryDetection={handleRetryDetection} />
-            </>
-          ) : (
-            <LoadingState />
-          )}
+  if (!snapResult) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Data tidak ditemukan</h2>
+          <p className="text-muted-foreground mb-4">Silakan coba scan ulang</p>
+          <button 
+            onClick={handleRetry}
+            className="px-4 py-2 bg-primary text-white rounded-lg"
+          >
+            Kembali ke Scan
+          </button>
         </div>
       </div>
+    );
+  }
 
+  return (
+    <div className="min-h-screen bg-background">
+      <MenuBarTop />
+      
+      <div className="px-4 pt-6 pb-24">
+        <CapturedImagePreview 
+          imageUrl={snapResult.snaped}
+          onImageClick={(imageData) => setSelectedImage(imageData)}
+        />
+        
+        <DetectedMaterials 
+          materials={snapResult.material_detected}
+        />
+        
+        <RecipeRecommendations
+          snapResult={snapResult}
+          currentIndex={currentIndex}
+          showNavButtons={showNavButtons}
+          scrollContainerRef={scrollContainerRef}
+          showDetails={showDetails}
+          onShowDetailsChange={setShowDetails}
+          onRecipeSelect={handleRecipeSelect}
+          onScrollToRecipe={scrollToRecipe}
+        />
+        
+        <RetrySection onRetryDetection={handleRetry} />
+      </div>
+
+      <MenuBar />
+      
       <ImagePopup
         isOpen={selectedImage !== null}
         onClose={() => setSelectedImage(null)}
         imageUrl={selectedImage?.url || ''}
         alt={selectedImage?.alt || ''}
       />
-      
-      <div className="flex justify-center pt-8">
-        <MenuBar />
-      </div>
-    </>
+    </div>
   );
 }

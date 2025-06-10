@@ -4,7 +4,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { RadarChart, Radar, PolarAngleAxis, PolarGrid, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Activity, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FoodData, PeriodData, Slide } from '@/types/dashboard';
-import { radarConfig, historyConfig } from '@/data/dashboard-data';
+import { radarConfig, historyConfig } from '@/constants/dashboard-data';
 
 interface HorizontalSliderProps {
   foodData: FoodData[];

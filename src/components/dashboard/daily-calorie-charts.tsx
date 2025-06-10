@@ -2,7 +2,7 @@ import React from 'react';
 import { ChartContainer } from "@/components/ui/chart";
 import { RadialBarChart, RadialBar, Label, PolarGrid, PolarRadiusAxis } from "recharts";
 import { DayData } from '@/types/dashboard';
-import { chartConfig } from '@/data/dashboard-data';
+import { chartConfig } from '@/constants/dashboard-data';
 
 interface DailyCalorieChartsProps {
   weeklyData: DayData[];

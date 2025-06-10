@@ -18,7 +18,7 @@ import {
   Eye
 } from 'lucide-react';
 import { DailyFood } from '@/types/dashboard';
-import { dailyFoodHistory } from '@/data/dashboard-data';
+import { dailyFoodHistory } from '@/constants/dashboard-data';
 
 export default function HistoryPage() {
   const router = useRouter();

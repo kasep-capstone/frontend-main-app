@@ -2,6 +2,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useCameraControls, useBrightnessDetection, useCaptureProcess } from '@/hooks';
+import { ROUTES } from '@/constants';
 import { 
   LoadingScreen,
   CameraPreview,
@@ -50,7 +51,7 @@ export default function SnapPage() {
   };
 
   const handleBack = () => {
-    router.push('/');
+    router.push(ROUTES.HOME);
   };
 
   return (

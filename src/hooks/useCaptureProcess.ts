@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { ROUTES, DEFAULTS } from '@/constants';
 
 export const useCaptureProcess = (
   videoRef: React.RefObject<HTMLVideoElement>,
@@ -20,7 +21,7 @@ export const useCaptureProcess = (
     if (isCapturing) {
       cancelTimer = setTimeout(() => {
         setShowCancel(true);
-      }, 5000);
+      }, DEFAULTS.CANCEL_TIMEOUT);
     } else {
       setShowCancel(false);
     }
@@ -61,11 +62,11 @@ export const useCaptureProcess = (
     
     try {
       // Simulate backend processing time (adjust this based on actual backend processing time)
-      await new Promise(resolve => setTimeout(resolve, 10000));
+      await new Promise(resolve => setTimeout(resolve, DEFAULTS.CAPTURE_TIMEOUT));
       
       // Only navigate if not cancelled
       if (!isCancelled.current) {
-        router.push('/snap/result');
+        router.push(ROUTES.SNAP_RESULT);
       }
     } catch (error) {
       console.error('Error during capture:', error);
@@ -86,11 +87,11 @@ export const useCaptureProcess = (
     
     try {
       // Same backend processing time as capture
-      await new Promise(resolve => setTimeout(resolve, 10000));
+      await new Promise(resolve => setTimeout(resolve, DEFAULTS.CAPTURE_TIMEOUT));
       
       // Only navigate if not cancelled
       if (!isCancelled.current) {
-        router.push('/snap/result');
+        router.push(ROUTES.SNAP_RESULT);
       }
     } catch (error) {
       console.error('Error during upload analysis:', error);

@@ -10,7 +10,7 @@ export default function TermsPage() {
       <div className="max-w-4xl mx-auto px-4 py-6 sm:py-12">
         {/* Header */}
         <div className="mb-12">
-          <Link href="/auth">
+          <Link href="/signin">
             <Button 
               variant="ghost" 
               size="sm" 
@@ -221,7 +221,7 @@ export default function TermsPage() {
               <div className="text-sm text-muted-foreground">
                 © 2024 KASEP Team
               </div>
-              <Link href="/auth">
+              <Link href="/signin">
                 <Button className="bg-primary hover:bg-primary/90 text-white px-6">
                   Kembali ke Halaman Masuk
                 </Button>

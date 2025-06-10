@@ -1,39 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { Button } from './ui/button';
 import { ChevronDown, ChevronUp, Clock, Users, Flame } from 'lucide-react';
 import ImagePopup from './image-popup';
-
-interface RecipeStep {
-  instruction: string;
-  image: string[];
-}
-
-interface Recipe {
-  title: string;
-  mainImage: string;
-  calories: number; // calories per serving
-  totalCalories: number; // total calories for all servings
-  duration: number; // cooking time in minutes
-  prepTime: number; // preparation time in minutes
-  servings: number; // number of servings
-  usedMaterial: string[];
-  unusedMaterial: string[];
-  missingMaterial: string[];
-  material: string[];
-  description: string;
-  step: RecipeStep[];
-}
-
-interface RecipeCardProps {
-  recipe: Recipe;
-  onSelect: (recipe: Recipe) => void;
-  showDetails: boolean;
-  onShowDetailsChange: (show: boolean) => void;
-}
+import { Recipe, RecipeCardProps } from '@/types';
 
 export function RecipeCard({ recipe, onSelect, showDetails, onShowDetailsChange }: RecipeCardProps) {
-  const [scrollPosition, setScrollPosition] = useState(0);
   const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null)
 
   return (
