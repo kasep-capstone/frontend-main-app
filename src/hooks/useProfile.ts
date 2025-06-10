@@ -153,8 +153,13 @@ export const useProfile = () => {
 
   const handleLogout = (): { success: boolean; error?: string } => {
     try {
-      const success = removeFromStorage(storageKeys.userSession);
-      return { success };
+      // Clear all localStorage data
+      localStorage.clear();
+      
+      // Clear all sessionStorage data
+      sessionStorage.clear();
+      
+      return { success: true };
     } catch (error) {
       console.error('Error during logout:', error);
       return { success: false, error: 'Terjadi kesalahan saat logout. Silakan coba lagi.' };

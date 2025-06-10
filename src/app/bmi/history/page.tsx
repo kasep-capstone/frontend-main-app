@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useBMIHistory } from '@/hooks/useBMIHistory';
 import Link from 'next/link';
+import { ProtectedPageContent } from '@/components/auth/ProtectedPage';
 
 export default function BMIHistoryPage() {
   const {
@@ -36,6 +37,7 @@ export default function BMIHistoryPage() {
 
   return (
     <>
+    <ProtectedPageContent>
       <MenuBarTop />
       <div className="min-h-screen bg-background pt-16 pb-20">
         <div className="max-w-md mx-auto px-4">
@@ -210,6 +212,7 @@ export default function BMIHistoryPage() {
       <div className="flex justify-center mt-6">
         <MenuBar />
       </div>
+    </ProtectedPageContent>
     </>
   );
 }

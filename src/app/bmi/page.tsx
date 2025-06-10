@@ -13,6 +13,7 @@ import { useBMI } from '@/hooks/useBMI';
 import { useBMIHistory } from '@/hooks/useBMIHistory';
 import { formatDate, getBMIColor } from '@/utils/bmi';
 import Link from 'next/link';
+import { ProtectedPageContent } from '@/components/auth/ProtectedPage';
 
 export default function BmiPage() {
   const [isActivityExpanded, setIsActivityExpanded] = useState(false);
@@ -79,6 +80,7 @@ export default function BmiPage() {
 
   return (
     <>
+    <ProtectedPageContent>
       <MenuBarTop />
       <div className="min-h-screen bg-background pt-16 pb-20">
         <div className="max-w-md mx-auto px-4">
@@ -376,6 +378,7 @@ export default function BmiPage() {
       <div className="flex justify-center mt-6">
         <MenuBar />
       </div>
+    </ProtectedPageContent>
     </>
   );
 };

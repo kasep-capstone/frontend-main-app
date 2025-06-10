@@ -11,6 +11,7 @@ import {
   BottomControls,
   BrightnessAlert
 } from '@/components/snap';
+import { ProtectedPageContent } from '@/components/auth/ProtectedPage';
 
 export default function SnapPage() {
   const router = useRouter();
@@ -55,6 +56,7 @@ export default function SnapPage() {
   };
 
   return (
+    <ProtectedPageContent>
     <div className="relative w-full h-screen bg-background overflow-hidden">
       {/* Hidden canvas for brightness detection */}
       <canvas ref={canvasRef} className="hidden" />
@@ -104,5 +106,6 @@ export default function SnapPage() {
         onBack={handleBack}
       />
     </div>
+    </ProtectedPageContent>
   );
 }

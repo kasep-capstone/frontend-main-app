@@ -10,6 +10,7 @@ import { DailyCalorieCharts } from '@/components/dashboard/daily-calorie-charts'
 import { HorizontalSlider } from '@/components/dashboard/horizontal-slider';
 import { DailyFoodHistory } from '@/components/dashboard/daily-food-history';
 import { WeeklyCalorieBenchmark } from '@/components/dashboard/weekly-calorie-benchmark';
+import { ProtectedPageContent } from '@/components/auth/ProtectedPage';
 import { DailyFood } from '@/types/dashboard';
 import {
   weeklyData,
@@ -53,7 +54,7 @@ export default function Dashboard() {
   };
 
   return (
-    <>
+    <ProtectedPageContent>
       <MenuBarTop />
       <div className="bg-background pt-16">
         <div className="max-w-md mx-auto px-4">
@@ -91,6 +92,6 @@ export default function Dashboard() {
       <div className="flex justify-center mt-36">
         <MenuBar />
       </div>
-    </>
+    </ProtectedPageContent>
   )
 }

@@ -1,6 +1,7 @@
 import "@/app/globals.css"
 import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/themes/theme-provider"
+import { AuthProvider } from "@/contexts/AuthContext"
 import type React from "react" // Added import for React
 import MobileLayout from "@/components/layout/MobileLayout"
 
@@ -15,9 +16,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light">
-          <MobileLayout>
-            {children}
-          </MobileLayout>
+          <AuthProvider>
+            <MobileLayout>
+              {children}
+            </MobileLayout>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

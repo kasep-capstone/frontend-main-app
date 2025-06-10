@@ -10,6 +10,7 @@ import { ProfileSettings } from '@/components/profile/ProfileSettings';
 import { SocialMediaSection } from '@/components/profile/SocialMediaSection';
 import { AccountSection } from '@/components/profile/AccountSection';
 import { AccountActions } from '@/components/profile/AccountActions';
+import { ProtectedPageContent } from '@/components/auth/ProtectedPage';
 
 // Import custom hooks
 import { useModal } from '@/hooks/useModal';
@@ -98,7 +99,7 @@ export default function Profile() {
         if (result.success) {
           showAlert('success', 'Logout Berhasil', 'Anda berhasil logout!\n\nSampai jumpa lagi! 👋');
           // Redirect to login page
-          // window.location.href = '/login';
+          window.location.href = '/signin';
         } else {
           showAlert('error', 'Logout Gagal', result.error || 'Terjadi kesalahan saat logout.');
         }
@@ -136,6 +137,7 @@ export default function Profile() {
 
   return (
     <>
+    <ProtectedPageContent>
       <MenuBarTop/>
       <div className="bg-background pt-16">
         <div className="max-w-md mx-auto px-4 pb-8">
@@ -203,6 +205,7 @@ export default function Profile() {
         onPromptChange={modal.onPromptChange}
         promptPlaceholder={modal.promptPlaceholder}
       />
+    </ProtectedPageContent>
     </>
   );
 }

@@ -14,6 +14,7 @@ import {
   RetrySection,
   LoadingState
 } from '@/components/snap-result';
+import { ProtectedPageContent } from '@/components/auth/ProtectedPage';
 
 export default function SnapResultPage() {
   const router = useRouter();
@@ -55,6 +56,7 @@ export default function SnapResultPage() {
   }
 
   return (
+    <ProtectedPageContent>
     <div className="min-h-screen bg-background">
       <MenuBarTop />
       
@@ -91,5 +93,6 @@ export default function SnapResultPage() {
         alt={selectedImage?.alt || ''}
       />
     </div>
+    </ProtectedPageContent>
   );
 }
