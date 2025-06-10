@@ -19,6 +19,11 @@ export interface UserProfile {
   email: string;
   gender: string;
   age: string;
+  height: string;
+  weight: string;
+  activityLevel: string;
+  avatar: string;
+  authProvider: string;
 }
 
 export interface ProfileData extends UserProfile {

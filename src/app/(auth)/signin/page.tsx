@@ -167,12 +167,7 @@ export default function SignInPage() {
               </Button>
             </form>
 
-            {/* Demo Credentials Info */}
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm dark:bg-amber-950/20 dark:border-amber-800 dark:text-amber-200">
-              <p className="font-medium mb-1">Demo Credentials:</p>
-              <p>Email: user@example.com</p>
-              <p>Password: password123</p>
-            </div>
+
 
             {/* Divider */}
             <div className="relative">

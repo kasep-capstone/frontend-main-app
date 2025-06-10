@@ -1,30 +1,144 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { UserProfile } from '@/types/profile';
 import { 
-  getUserProfile, 
-  saveUserProfile, 
-  getProfileImage, 
   saveProfileImage,
   getTargetCaloriesFromBMI,
-  clearAllAppData,
-  removeFromStorage,
-  storageKeys
+  clearAllAppData
 } from '@/utils/localStorage';
-import { removeAllAuthCookies } from '@/utils/auth-cookies';
-
-const defaultProfile: UserProfile = {
-  name: 'John Doe',
-  email: 'john.doe@gmail.com',
-  gender: 'Male',
-  age: '25'
-};
+import { useAuth } from '@/contexts/AuthContext';
+import { apiService } from '@/services/userService';
 
 export const useProfile = () => {
+  const { user, updateUser, logout, fetchUserProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [targetCalories, setTargetCalories] = useState<number>(2500);
-  const [formData, setFormData] = useState<UserProfile>(defaultProfile);
-  const [originalFormData, setOriginalFormData] = useState<UserProfile>(defaultProfile);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const hasInitialized = useRef(false);
+  const [formData, setFormData] = useState<UserProfile>({
+    name: '',
+    email: '',
+    gender: '',
+    age: '',
+    height: '',
+    weight: '',
+    activityLevel: '',
+    avatar: '',
+    authProvider: ''
+  });
+  const [originalFormData, setOriginalFormData] = useState<UserProfile>({
+    name: '',
+    email: '',
+    gender: '',
+    age: '',
+    height: '',
+    weight: '',
+    activityLevel: '',
+    avatar: '',
+    authProvider: ''
+  });
+
+  const loadProfileData = useCallback(async () => {
+    // Prevent double fetch in development mode (React.StrictMode)
+    if (hasInitialized.current) {
+      return;
+    }
+    
+    hasInitialized.current = true;
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Load target calories from BMI data
+      const calories = getTargetCaloriesFromBMI();
+      setTargetCalories(calories);
+
+      // Fetch user profile via AuthContext (which handles API call)
+      const apiUser = await fetchUserProfile();
+      
+      if (!apiUser) {
+        throw new Error('Failed to fetch user profile');
+      }
+      
+      // Calculate age from birthDate if available
+      let age = '';
+      if (apiUser.birthDate) {
+        const birthDate = new Date(apiUser.birthDate);
+        const today = new Date();
+        const calculatedAge = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age = (calculatedAge - 1).toString();
+        } else {
+          age = calculatedAge.toString();
+        }
+      }
+
+      // Map API response to UserProfile format
+      const fullName = `${apiUser.firstName || ''} ${apiUser.lastName || ''}`.trim();
+      const profileData: UserProfile = {
+        name: fullName,
+        email: apiUser.email || '',
+        gender: apiUser.gender || '',
+        age: age,
+        height: apiUser.height?.toString() || '',
+        weight: apiUser.weight?.toString() || '',
+        activityLevel: apiUser.activityLevel || '',
+        avatar: apiUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=random`,
+        authProvider: apiUser.authProvider || ''
+      };
+
+      setFormData(profileData);
+      setOriginalFormData(profileData);
+      setProfileImage(profileData.avatar);
+      
+      // Update auth context with fresh data (but don't depend on it)
+      updateUser({
+        id: apiUser.id,
+        userAlias: apiUser.userAlias,
+        email: apiUser.email,
+        username: apiUser.username,
+        firstName: apiUser.firstName,
+        lastName: apiUser.lastName,
+        birthDate: apiUser.birthDate,
+        gender: apiUser.gender,
+        height: apiUser.height,
+        weight: apiUser.weight,
+        activityLevel: apiUser.activityLevel,
+        createdAt: apiUser.createdAt,
+        updatedAt: apiUser.updatedAt,
+        authProvider: apiUser.authProvider,
+        providerId: apiUser.providerId
+      });
+      
+    } catch (error) {
+      console.error('Error loading profile data:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load profile data');
+      
+      // Fallback to auth context data if API fails
+      if (user) {
+        const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+        const fallbackData: UserProfile = {
+          name: fullName,
+          email: user.email || '',
+          gender: user.gender || '',
+          age: '',
+          height: user.height?.toString() || '',
+          weight: user.weight?.toString() || '',
+          activityLevel: user.activityLevel || '',
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=random`,
+          authProvider: user.authProvider || ''
+        };
+        
+        setFormData(fallbackData);
+        setOriginalFormData(fallbackData);
+        setProfileImage(fallbackData.avatar);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchUserProfile]); // Only depend on fetchUserProfile
 
   // Load profile data on mount
   useEffect(() => {
@@ -43,26 +157,7 @@ export const useProfile = () => {
     return () => {
       window.removeEventListener('focus', handleFocus);
     };
-  }, []);
-
-  const loadProfileData = () => {
-    // Load target calories from BMI data
-    const calories = getTargetCaloriesFromBMI();
-    setTargetCalories(calories);
-
-    // Load saved profile data
-    const savedProfile = getUserProfile();
-    if (savedProfile) {
-      setFormData(savedProfile);
-      setOriginalFormData(savedProfile);
-    }
-
-    // Load saved profile image
-    const savedImage = getProfileImage();
-    if (savedImage) {
-      setProfileImage(savedImage);
-    }
-  };
+  }, []); // Empty dependency array - only run on mount
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -100,14 +195,25 @@ export const useProfile = () => {
     }
 
     try {
-      const success = saveUserProfile(formData);
-      if (success) {
-        setOriginalFormData({ ...formData });
-        setIsEditing(false);
-        return { success: true };
-      } else {
-        return { success: false, error: 'Gagal menyimpan profil. Silakan coba lagi.' };
+      // Note: Profile data is now managed via API only, not saved locally
+      // Update auth context if name or email changed
+      const currentFullName = user ? `${user.firstName} ${user.lastName}`.trim() : '';
+      if (user && (currentFullName !== formData.name || user.email !== formData.email)) {
+        // Split name back into firstName and lastName
+        const nameParts = formData.name.trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        
+        updateUser({
+          firstName: firstName,
+          lastName: lastName,
+          email: formData.email
+        });
       }
+      
+      setOriginalFormData({ ...formData });
+      setIsEditing(false);
+      return { success: true };
     } catch (error) {
       console.error('Error saving profile:', error);
       return { success: false, error: 'Terjadi kesalahan saat menyimpan profil.' };
@@ -154,8 +260,7 @@ export const useProfile = () => {
 
   const handleLogout = (): { success: boolean; error?: string } => {
     try {
-      removeAllAuthCookies()
-      
+      logout(); // Use auth context logout method
       return { success: true };
     } catch (error) {
       console.error('Error during logout:', error);
@@ -168,7 +273,17 @@ export const useProfile = () => {
       const success = clearAllAppData();
       if (success) {
         // Reset component state
-        setFormData(defaultProfile);
+        setFormData({
+          name: '',
+          email: '',
+          gender: '',
+          age: '',
+          height: '',
+          weight: '',
+          activityLevel: '',
+          avatar: '',
+          authProvider: ''
+        });
         setProfileImage(null);
         setTargetCalories(2500);
         setIsEditing(false);
@@ -182,6 +297,12 @@ export const useProfile = () => {
     }
   };
 
+  // Reset initialization flag and reload data
+  const reloadProfileData = useCallback(async () => {
+    hasInitialized.current = false;
+    await loadProfileData();
+  }, [loadProfileData]);
+
   return {
     // State
     isEditing,
@@ -189,6 +310,8 @@ export const useProfile = () => {
     targetCalories,
     formData,
     originalFormData,
+    isLoading,
+    error,
     
     // Actions
     handleInputChange,
@@ -199,6 +322,7 @@ export const useProfile = () => {
     handleLogout,
     handleDeleteAppData,
     loadProfileData,
+    reloadProfileData,
     validateForm
   };
 }; 

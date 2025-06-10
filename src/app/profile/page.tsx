@@ -161,10 +161,10 @@ export default function Profile() {
           />
 
           {/* Social Media Section */}
-          <SocialMediaSection
+          {/* <SocialMediaSection
             onConnectTwitter={handleConnectTwitter}
             onConnectInstagram={handleConnectInstagram}
-          />
+          /> */}
 
           {/* Account Integration */}
           <AccountSection formData={formData} />

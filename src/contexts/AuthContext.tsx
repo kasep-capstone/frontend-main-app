@@ -1,25 +1,62 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { AUTH_PATHS } from '@/utils/auth-routes'
 import { 
   setAuthTokenCookie, 
   removeAllAuthCookies, 
-  setUserCookie,
   getUserFromCookie,
   getAuthTokenFromCookie,
   setIntendedPathCookie,
   getIntendedPathFromCookie,
   removeIntendedPathCookie
 } from '@/utils/auth-cookies'
+import { apiService, LoginRequest, RegisterRequest, BackendUser } from '@/services/userService'
+
+// Helper function to check if JWT token is expired or near expiry
+const isTokenExpiredOrNearExpiry = (token: string, bufferMinutes: number = 5): boolean => {
+  try {
+    // Simple JWT decode (payload only, not for security validation)
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    const now = Math.floor(Date.now() / 1000) // Current time in seconds
+    const expiryTime = payload.exp
+    
+    if (!expiryTime) {
+      console.warn('Token has no expiry time')
+      return true // If no expiry, consider as expired
+    }
+    
+    // Check if token expires within buffer time
+    const bufferSeconds = bufferMinutes * 60
+    const timeUntilExpiry = expiryTime - now
+    
+    console.log(`Token expires in ${Math.floor(timeUntilExpiry / 60)} minutes`)
+    return timeUntilExpiry <= bufferSeconds
+  } catch (error) {
+    console.warn('Error decoding token:', error)
+    return true // If can't decode, consider as expired
+  }
+}
 
 // Types
 export interface User {
   id: string
-  name: string
+  userAlias: string
   email: string
-  avatar?: string
+  username: string
+  firstName: string
+  lastName: string
+  birthDate: string | null
+  gender: string | null
+  height: number | null
+  weight: number | null
+  activityLevel: string | null
+  createdAt: string
+  updatedAt: string
+  authProvider: string
+  providerId: string | null
+  avatar: string | null
 }
 
 export interface AuthContextType {
@@ -31,6 +68,8 @@ export interface AuthContextType {
   register: (userData: RegisterData) => Promise<void>
   logout: () => void
   updateUser: (userData: Partial<User>) => void
+  refreshAuthToken: () => Promise<boolean>
+  fetchUserProfile: () => Promise<User | null>
 }
 
 export interface RegisterData {
@@ -47,24 +86,104 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const authInitialized = useRef(false)
 
   // Initialize auth state
   useEffect(() => {
-    initializeAuth()
+    if (!authInitialized.current) {
+      initializeAuth()
+      authInitialized.current = true
+    }
   }, [])
+
+  // Background token refresh - check every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const token = getAuthTokenFromCookie()
+      
+      if (token && user && isTokenExpiredOrNearExpiry(token, 10)) {
+        console.log('Background token refresh triggered')
+        await refreshAuthToken()
+      }
+    }, 5 * 60 * 1000) // Check every 5 minutes
+
+    return () => clearInterval(interval)
+  }, [user])
 
   const initializeAuth = async () => {
     try {
       setIsLoading(true)
       
-      // Check if user is stored in cookies
-      const storedUser = getUserFromCookie()
+      // Check if token exists
       const token = getAuthTokenFromCookie()
       
-      if (storedUser && token) {
-        // TODO: Validate token with backend
-        // For now, we'll assume stored data is valid
-        setUser(storedUser)
+      if (token) {
+        // Smart token management: only refresh if needed
+        if (isTokenExpiredOrNearExpiry(token)) {
+          console.log('Token expiring soon, refreshing...')
+          
+          try {
+            const response = await apiService.refreshToken(token)
+            if (response.success && response.data) {
+              // Token refreshed successfully
+              setAuthTokenCookie(response.data.token)
+              console.log('Token refreshed successfully')
+              
+              // Set a minimal auth state without full user data
+              // User data will be fetched only when needed (e.g., profile page)
+              setUser({
+                id: '',
+                userAlias: '',
+                email: '',
+                username: '',
+                firstName: '',
+                lastName: '',
+                birthDate: null,
+                gender: null,
+                height: null,
+                weight: null,
+                activityLevel: null,
+                createdAt: '',
+                updatedAt: '',
+                authProvider: '',
+                providerId: null,
+                avatar: null
+              })
+            } else {
+              // Token refresh failed, clear auth data
+              console.warn('Token refresh failed:', response.error)
+              removeAllAuthCookies()
+            }
+          } catch (error) {
+            // If refresh fails, assume token is invalid
+            console.warn('Token refresh error:', error)
+            removeAllAuthCookies()
+          }
+        } else {
+          // Token is still valid - set authenticated state without fetching full profile
+          console.log('Token still valid, user authenticated')
+          setUser({
+            id: '',
+            userAlias: '',
+            email: '',
+            username: '',
+            firstName: '',
+            lastName: '',
+            birthDate: null,
+            gender: null,
+            height: null,
+            weight: null,
+            activityLevel: null,
+            createdAt: '',
+            updatedAt: '',
+            authProvider: '',
+            providerId: null,
+            avatar: null
+          })
+        }
+      } else {
+        // No token found
+        console.log('No authentication token found')
       }
     } catch (error) {
       console.error('Auth initialization error:', error)
@@ -79,15 +198,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true)
       
-      // TODO: Replace with actual API call
-      const response = await mockLogin(email, password)
+      const credentials: LoginRequest = { email, password }
+      const response = await apiService.login(credentials)
       
-      if (response.success) {
-        const userData = response.user!
-        const token = response.token!
+      if (response.success && response.data) {
+        const { token, user: backendUser } = response.data
+        
+        // Store the complete backend user data directly
+        const userData: User = backendUser
         
         // Store user data and token in cookies
-        setUserCookie(userData)
+        // setUserCookie(userData)
         setAuthTokenCookie(token)
         
         setUser(userData)
@@ -97,7 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         removeIntendedPathCookie()
         router.push(intendedPath)
       } else {
-        throw new Error(response.message || 'Login failed')
+        throw new Error(response.message || response.error || 'Login failed')
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -111,24 +232,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true)
       
-      // TODO: Implement Google OAuth
-      const response = await mockGoogleLogin()
+      // TODO: Implement Google OAuth integration
+      // This requires setting up Google OAuth provider and backend support
+      throw new Error('Google login is not yet implemented. Please use email and password to sign in.')
       
-      if (response.success && response.user && response.token) {
-        const userData = response.user
-        const token = response.token
-        
-        setUserCookie(userData)
-        setAuthTokenCookie(token)
-        
-        setUser(userData)
-        
-        const intendedPath = getIntendedPathFromCookie() || AUTH_PATHS.DASHBOARD
-        removeIntendedPathCookie()
-        router.push(intendedPath)
-      } else {
-        throw new Error(response.message || 'Google login failed')
-      }
     } catch (error) {
       console.error('Google login error:', error)
       throw error
@@ -141,14 +248,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true)
       
-      // TODO: Replace with actual API call
-      const response = await mockRegister(userData)
+      const registerData: RegisterRequest = {
+        email: userData.email,
+        password: userData.password,
+        fullName: userData.name
+      }
       
-      if (response.success && response.user && response.token) {
-        const newUser = response.user
-        const token = response.token
+      const response = await apiService.register(registerData)
+      
+      if (response.success && response.data) {
+        const { token, user: backendUser } = response.data
         
-        setUserCookie(newUser)
+        // Store the complete backend user data directly
+        const newUser: User = backendUser
+        
         setAuthTokenCookie(token)
         
         setUser(newUser)
@@ -156,7 +269,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Redirect to dashboard after successful registration
         router.push(AUTH_PATHS.DASHBOARD)
       } else {
-        throw new Error(response.message || 'Registration failed')
+        throw new Error(response.message || response.error || 'Registration failed')
       }
     } catch (error) {
       console.error('Registration error:', error)
@@ -179,7 +292,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       const updatedUser = { ...user, ...userData }
       setUser(updatedUser)
-      setUserCookie(updatedUser)
+    }
+  }
+
+  // Method to manually refresh token when needed
+  const refreshAuthToken = async (): Promise<boolean> => {
+    try {
+      const token = getAuthTokenFromCookie()
+      if (!token) {
+        console.warn('No token found for refresh')
+        return false
+      }
+
+      const response = await apiService.refreshToken(token)
+      if (response.success && response.data) {
+        setAuthTokenCookie(response.data.token)
+        console.log('Manual token refresh successful')
+        return true
+      } else {
+        console.warn('Manual token refresh failed:', response.error)
+        removeAllAuthCookies()
+        setUser(null)
+        return false
+      }
+    } catch (error) {
+      console.error('Manual token refresh error:', error)
+      removeAllAuthCookies()
+      setUser(null)
+      return false
+    }
+  }
+
+  // Method to fetch user profile data when needed
+  const fetchUserProfile = async (): Promise<User | null> => {
+    try {
+      const response = await apiService.getUserProfile()
+      if (response.success && response.data) {
+        const userData = response.data.user
+        setUser(userData)
+        return userData
+      } else {
+        console.warn('Failed to fetch user profile:', response.error)
+        return null
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error)
+      return null
     }
   }
 
@@ -191,7 +349,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loginWithGoogle,
     register,
     logout,
-    updateUser
+    updateUser,
+    refreshAuthToken,
+    fetchUserProfile
   }
 
   return (
@@ -210,72 +370,4 @@ export function useAuth() {
   return context
 }
 
-// Mock API functions (replace with actual API calls)
-async function mockLogin(email: string, password: string): Promise<{
-  success: boolean
-  user?: User
-  token?: string
-  message?: string
-}> {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  
-  // Mock validation
-  if (email === 'user@example.com' && password === 'password123') {
-    return {
-      success: true,
-      user: {
-        id: '1',
-        name: 'John Doe',
-        email: 'user@example.com',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150'
-      },
-      token: 'mock-jwt-token-' + Date.now()
-    }
-  }
-  
-  return {
-    success: false,
-    message: 'Email atau password salah'
-  }
-}
-
-async function mockGoogleLogin(): Promise<{
-  success: boolean
-  user?: User
-  token?: string
-  message?: string
-}> {
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  
-  return {
-    success: true,
-    user: {
-      id: '2',
-      name: 'Google User',
-      email: 'google@example.com',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b789?w=150'
-    },
-    token: 'mock-google-token-' + Date.now()
-  }
-}
-
-async function mockRegister(userData: RegisterData): Promise<{
-  success: boolean
-  user?: User
-  token?: string
-  message?: string
-}> {
-  await new Promise(resolve => setTimeout(resolve, 1500))
-  
-  return {
-    success: true,
-    user: {
-      id: Date.now().toString(),
-      name: userData.name,
-      email: userData.email,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=random`
-    },
-    token: 'mock-register-token-' + Date.now()
-  }
-} 
+ 
