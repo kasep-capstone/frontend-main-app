@@ -10,6 +10,7 @@ import {
   removeFromStorage,
   storageKeys
 } from '@/utils/localStorage';
+import { removeAllAuthCookies } from '@/utils/auth-cookies';
 
 const defaultProfile: UserProfile = {
   name: 'John Doe',
@@ -153,11 +154,7 @@ export const useProfile = () => {
 
   const handleLogout = (): { success: boolean; error?: string } => {
     try {
-      // Clear all localStorage data
-      localStorage.clear();
-      
-      // Clear all sessionStorage data
-      sessionStorage.clear();
+      removeAllAuthCookies()
       
       return { success: true };
     } catch (error) {

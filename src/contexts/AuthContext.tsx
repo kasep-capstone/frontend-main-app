@@ -3,7 +3,16 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AUTH_PATHS } from '@/utils/auth-routes'
-import { setAuthTokenCookie, removeAuthTokenCookie } from '@/utils/auth-cookies'
+import { 
+  setAuthTokenCookie, 
+  removeAllAuthCookies, 
+  setUserCookie,
+  getUserFromCookie,
+  getAuthTokenFromCookie,
+  setIntendedPathCookie,
+  getIntendedPathFromCookie,
+  removeIntendedPathCookie
+} from '@/utils/auth-cookies'
 
 // Types
 export interface User {
@@ -48,22 +57,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true)
       
-      // Check if user is stored in localStorage
-      const storedUser = localStorage.getItem('user')
-      const token = localStorage.getItem('authToken')
+      // Check if user is stored in cookies
+      const storedUser = getUserFromCookie()
+      const token = getAuthTokenFromCookie()
       
       if (storedUser && token) {
-        const userData: User = JSON.parse(storedUser)
-        
         // TODO: Validate token with backend
         // For now, we'll assume stored data is valid
-        setUser(userData)
+        setUser(storedUser)
       }
     } catch (error) {
       console.error('Auth initialization error:', error)
       // Clear invalid data
-      localStorage.removeItem('user')
-      localStorage.removeItem('authToken')
+      removeAllAuthCookies()
     } finally {
       setIsLoading(false)
     }
@@ -80,16 +86,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const userData = response.user!
         const token = response.token!
         
-        // Store user data and token
-        localStorage.setItem('user', JSON.stringify(userData))
-        localStorage.setItem('authToken', token)
+        // Store user data and token in cookies
+        setUserCookie(userData)
         setAuthTokenCookie(token)
         
         setUser(userData)
         
         // Redirect to dashboard or intended page
-        const intendedPath = sessionStorage.getItem('intendedPath') || AUTH_PATHS.DASHBOARD
-        sessionStorage.removeItem('intendedPath')
+        const intendedPath = getIntendedPathFromCookie() || AUTH_PATHS.DASHBOARD
+        removeIntendedPathCookie()
         router.push(intendedPath)
       } else {
         throw new Error(response.message || 'Login failed')
@@ -109,19 +114,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // TODO: Implement Google OAuth
       const response = await mockGoogleLogin()
       
-      if (response.success) {
+      if (response.success && response.user && response.token) {
         const userData = response.user
         const token = response.token
         
-        localStorage.setItem('user', JSON.stringify(userData))
-        localStorage.setItem('authToken', token)
+        setUserCookie(userData)
         setAuthTokenCookie(token)
         
         setUser(userData)
         
-        const intendedPath = sessionStorage.getItem('intendedPath') || AUTH_PATHS.DASHBOARD
-        sessionStorage.removeItem('intendedPath')
+        const intendedPath = getIntendedPathFromCookie() || AUTH_PATHS.DASHBOARD
+        removeIntendedPathCookie()
         router.push(intendedPath)
+      } else {
+        throw new Error(response.message || 'Google login failed')
       }
     } catch (error) {
       console.error('Google login error:', error)
@@ -138,12 +144,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // TODO: Replace with actual API call
       const response = await mockRegister(userData)
       
-      if (response.success) {
+      if (response.success && response.user && response.token) {
         const newUser = response.user
         const token = response.token
         
-        localStorage.setItem('user', JSON.stringify(newUser))
-        localStorage.setItem('authToken', token)
+        setUserCookie(newUser)
         setAuthTokenCookie(token)
         
         setUser(newUser)
@@ -162,12 +167,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = () => {
-    // Clear user data
+    // Clear user data and all auth cookies
     setUser(null)
-    localStorage.removeItem('user')
-    localStorage.removeItem('authToken')
-    removeAuthTokenCookie()
-    sessionStorage.removeItem('intendedPath')
+    removeAllAuthCookies()
     
     // Redirect to login
     router.push(AUTH_PATHS.SIGNIN)
@@ -177,7 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       const updatedUser = { ...user, ...userData }
       setUser(updatedUser)
-      localStorage.setItem('user', JSON.stringify(updatedUser))
+      setUserCookie(updatedUser)
     }
   }
 
@@ -238,7 +240,12 @@ async function mockLogin(email: string, password: string): Promise<{
   }
 }
 
-async function mockGoogleLogin() {
+async function mockGoogleLogin(): Promise<{
+  success: boolean
+  user?: User
+  token?: string
+  message?: string
+}> {
   await new Promise(resolve => setTimeout(resolve, 1000))
   
   return {
@@ -253,7 +260,12 @@ async function mockGoogleLogin() {
   }
 }
 
-async function mockRegister(userData: RegisterData) {
+async function mockRegister(userData: RegisterData): Promise<{
+  success: boolean
+  user?: User
+  token?: string
+  message?: string
+}> {
   await new Promise(resolve => setTimeout(resolve, 1500))
   
   return {
