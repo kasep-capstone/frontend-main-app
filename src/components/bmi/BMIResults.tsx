@@ -48,7 +48,7 @@ export const BMIResults: React.FC<BMIResultsProps> = ({
               </div>
               <div className="text-center flex-1">
                 <div className="text-2xl font-bold text-amber-600">
-                  {idealTargets.targetCalories.toLocaleString()}
+                  {idealTargets.targetCalories?.toLocaleString() || '0'}
                 </div>
                 <div className="text-xs text-amber-600">Target</div>
               </div>
@@ -89,7 +89,7 @@ export const BMIResults: React.FC<BMIResultsProps> = ({
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-green-600">Target:</span>
-                <span className="font-bold text-green-600">{idealTargets.targetBMI}</span>
+                <span className="font-bold text-green-600">{idealTargets.targetBMI || 'N/A'}</span>
               </div>
               <div className="bg-amber-50 border border-amber-200 rounded px-2 py-1">
                 <div className="text-xs text-amber-800 text-center font-medium">

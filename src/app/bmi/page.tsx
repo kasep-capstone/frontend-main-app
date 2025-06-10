@@ -53,25 +53,45 @@ export default function BmiPage() {
     setShowPreviewModal(true);
   };
 
-  const handleSaveWithGoals = () => {
-    setHasSetGoals(true);
-    saveRecord(true);
-    setShowPreviewModal(false);
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
+  const handleSaveWithGoals = async () => {
+    try {
+      setHasSetGoals(true);
+      await saveRecord(true);
+      setShowPreviewModal(false);
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    } catch (error) {
+      console.error('Error saving BMI record with goals:', error);
+      setShowPreviewModal(false);
+      if (error instanceof Error && error.message.includes('Authentication required')) {
+        alert('Silakan login terlebih dahulu untuk menyimpan data BMI.');
+      } else {
+        alert('Gagal menyimpan data BMI. Silakan coba lagi.');
+      }
+    }
   };
 
-  const handleSaveWithoutGoals = () => {
-    saveRecord(false);
-    setShowPreviewModal(false);
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
+  const handleSaveWithoutGoals = async () => {
+    try {
+      await saveRecord(false);
+      setShowPreviewModal(false);
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    } catch (error) {
+      console.error('Error saving BMI record:', error);
+      setShowPreviewModal(false);
+      if (error instanceof Error && error.message.includes('Authentication required')) {
+        alert('Silakan login terlebih dahulu untuk menyimpan data BMI.');
+      } else {
+        alert('Gagal menyimpan data BMI. Silakan coba lagi.');
+      }
+    }
   };
 
   const handleCancelPreview = () => {
@@ -302,19 +322,19 @@ export default function BmiPage() {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="text-center">
                         <div className="text-green-800 font-medium mb-1">Target BMI</div>
-                        <div className="text-lg font-bold text-green-600">{idealTargets.targetBMI}</div>
+                        <div className="text-lg font-bold text-green-600">{idealTargets.targetBMI || 'N/A'}</div>
                       </div>
                       <div className="text-center">
                         <div className="text-green-800 font-medium mb-1">Target Berat</div>
-                        <div className="text-lg font-bold text-green-600">{idealTargets.targetWeight} kg</div>
+                        <div className="text-lg font-bold text-green-600">{idealTargets.targetWeight || 0} kg</div>
                       </div>
                       <div className="text-center">
                         <div className="text-green-800 font-medium mb-1">Target Kalori</div>
-                        <div className="text-lg font-bold text-green-600">{idealTargets.targetCalories.toLocaleString()}</div>
+                        <div className="text-lg font-bold text-green-600">{idealTargets.targetCalories?.toLocaleString() || '0'}</div>
                       </div>
                       <div className="text-center">
                         <div className="text-green-800 font-medium mb-1">Estimasi Waktu</div>
-                        <div className="text-lg font-bold text-green-600">{idealTargets.timeEstimate}</div>
+                        <div className="text-lg font-bold text-green-600">{idealTargets.timeEstimate || 'N/A'}</div>
                       </div>
                     </div>
                   </div>

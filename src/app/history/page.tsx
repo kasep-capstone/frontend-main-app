@@ -125,11 +125,9 @@ export default function HistoryPage() {
 
   const totalCalories = filteredHistory.reduce((sum, food) => sum + food.calories, 0);
 
-  // Debug function to show current filter values
   const handleTimeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newValue = e.target.value;
     setSelectedTimeFilter(newValue);
-    console.log('Time filter changed to:', newValue);
   };
 
   return (

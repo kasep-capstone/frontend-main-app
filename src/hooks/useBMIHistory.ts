@@ -11,29 +11,48 @@ export const useBMIHistory = () => {
   const [trend, setTrend] = useState<BMITrend | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load history from storage
+  // Load history from API
   const loadHistory = useCallback(async () => {
     setIsLoading(true);
     try {
       const historyData = await BMIService.fetchBMIHistory();
       setHistory(historyData);
       
-      // Calculate statistics and trend
-      const stats = getBMIStatistics(historyData);
-      setStatistics(stats);
+      // Get statistics from API
+      try {
+        const apiStats = await BMIService.getBMIStatistics();
+        setStatistics(apiStats);
+      } catch (error) {
+        console.error('Error loading BMI statistics:', error);
+        setStatistics(null);
+      }
       
-      const trendData = getBMITrend(historyData);
-      setTrend(trendData);
+      // Get trends from API
+      try {
+        const apiTrend = await BMIService.getBMITrends();
+        setTrend(apiTrend);
+      } catch (error) {
+        console.error('Error loading BMI trends:', error);
+        setTrend(null);
+      }
     } catch (error) {
       console.error('Error loading BMI history:', error);
+      // Set empty state if not authenticated or API error
+      setHistory([]);
+      setStatistics(null);
+      setTrend(null);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Initial load
+  // Initial load - delay slightly to ensure auth is ready
   useEffect(() => {
-    loadHistory();
+    const timer = setTimeout(() => {
+      loadHistory();
+    }, 100); // Small delay to ensure auth context is ready
+
+    return () => clearTimeout(timer);
   }, [loadHistory]);
 
   // Filter history based on category
@@ -59,7 +78,7 @@ export const useBMIHistory = () => {
   // Delete record
   const deleteRecord = useCallback(async (id: string) => {
     try {
-      const updatedHistory = BMIService.deleteBMIRecord(id);
+      const updatedHistory = await BMIService.deleteBMIRecord(id);
       setHistory(updatedHistory);
       
       // Recalculate statistics and trend
@@ -77,9 +96,9 @@ export const useBMIHistory = () => {
   }, []);
 
   // Export history
-  const exportHistory = useCallback(() => {
+  const exportHistory = useCallback(async () => {
     try {
-      const exportData = BMIService.exportBMIHistory();
+      const exportData = await BMIService.exportBMIHistory();
       
       // Create download link
       const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(exportData);
@@ -99,7 +118,7 @@ export const useBMIHistory = () => {
   const importHistory = useCallback(async (file: File) => {
     try {
       const fileContent = await file.text();
-      const importedHistory = BMIService.importBMIHistory(fileContent);
+      const importedHistory = await BMIService.importBMIHistory(fileContent);
       setHistory(importedHistory);
       
       // Recalculate statistics and trend
@@ -131,21 +150,21 @@ export const useBMIHistory = () => {
 
   // Get goals progress
   const getGoalsProgress = useCallback(() => {
-    if (history.length === 0) return { percentage: 0, count: 0, total: 0 };
+    if (!history || history.length === 0) return { percentage: 0, count: 0, total: 0 };
     
-    const withGoalsCount = history.filter(record => record.hasGoals).length;
+    const withGoalsCount = history.filter(record => record?.hasGoals).length;
     const percentage = Math.round((withGoalsCount / history.length) * 100);
     
     return {
-      percentage,
-      count: withGoalsCount,
-      total: history.length
+      percentage: isNaN(percentage) ? 0 : percentage,
+      count: withGoalsCount || 0,
+      total: history.length || 0
     };
   }, [history]);
 
   // Get latest record
   const getLatestRecord = useCallback(() => {
-    return history.length > 0 ? history[0] : null;
+    return history && history.length > 0 ? history[0] : null;
   }, [history]);
 
   return {

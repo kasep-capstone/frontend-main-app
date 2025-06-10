@@ -76,7 +76,7 @@ export const BMIHistoryList: React.FC<BMIHistoryListProps> = ({
                 <div className="text-xs text-muted-foreground">BMI</div>
                 {record.hasGoals && record.idealTargets && (
                   <div className="text-xs text-amber-600 mt-1">
-                    → {record.idealTargets.targetBMI}
+                    → {record.idealTargets.targetBMI || 'N/A'}
                   </div>
                 )}
               </div>
@@ -87,7 +87,7 @@ export const BMIHistoryList: React.FC<BMIHistoryListProps> = ({
                 <div className="text-xs text-muted-foreground">Berat</div>
                 {record.hasGoals && record.idealTargets && (
                   <div className="text-xs text-amber-600 mt-1">
-                    → {record.idealTargets.targetWeight}kg
+                    → {record.idealTargets.targetWeight || 0}kg
                   </div>
                 )}
               </div>
@@ -98,7 +98,7 @@ export const BMIHistoryList: React.FC<BMIHistoryListProps> = ({
                 <div className="text-xs text-muted-foreground">Kalori</div>
                 {record.hasGoals && record.idealTargets && (
                   <div className="text-xs text-amber-600 mt-1">
-                    → {record.idealTargets.targetCalories.toLocaleString('id-ID')}
+                    → {record.idealTargets.targetCalories?.toLocaleString('id-ID') || '0'}
                   </div>
                 )}
               </div>
@@ -110,7 +110,7 @@ export const BMIHistoryList: React.FC<BMIHistoryListProps> = ({
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium text-amber-800">Progress Target:</span>
                   <span className="text-amber-600">
-                    {record.idealTargets?.timeEstimate}
+                    {record.idealTargets?.timeEstimate || 'N/A'}
                   </span>
                 </div>
                 <div className="mt-2 text-xs text-amber-700">
