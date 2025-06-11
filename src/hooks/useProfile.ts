@@ -2,41 +2,47 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { UserProfile } from '@/types/profile';
 import { 
   saveProfileImage,
-  getTargetCaloriesFromBMI,
   clearAllAppData
 } from '@/utils/localStorage';
 import { useAuth } from '@/contexts/AuthContext';
-import { apiService } from '@/services/userService';
+import { apiClient } from '@/services/apiClient';
 
 export const useProfile = () => {
   const { user, updateUser, logout, fetchUserProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [targetCalories, setTargetCalories] = useState<number>(2500);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasInitialized = useRef(false);
   const [formData, setFormData] = useState<UserProfile>({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     gender: '',
-    age: '',
+    birthDate: '',
     height: '',
     weight: '',
     activityLevel: '',
     avatar: '',
-    authProvider: ''
+    authProvider: '',
+    targetCalories: null,
+    password: '',
+    confirmPassword: ''
   });
   const [originalFormData, setOriginalFormData] = useState<UserProfile>({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     gender: '',
-    age: '',
+    birthDate: '',
     height: '',
     weight: '',
     activityLevel: '',
     avatar: '',
-    authProvider: ''
+    authProvider: '',
+    targetCalories: null,
+    password: '',
+    confirmPassword: ''
   });
 
   const loadProfileData = useCallback(async () => {
@@ -50,43 +56,29 @@ export const useProfile = () => {
     setError(null);
     
     try {
-      // Load target calories from BMI data
-      const calories = getTargetCaloriesFromBMI();
-      setTargetCalories(calories);
-
       // Fetch user profile via AuthContext (which handles API call)
       const apiUser = await fetchUserProfile();
       
       if (!apiUser) {
         throw new Error('Failed to fetch user profile');
       }
-      
-      // Calculate age from birthDate if available
-      let age = '';
-      if (apiUser.birthDate) {
-        const birthDate = new Date(apiUser.birthDate);
-        const today = new Date();
-        const calculatedAge = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-          age = (calculatedAge - 1).toString();
-        } else {
-          age = calculatedAge.toString();
-        }
-      }
 
       // Map API response to UserProfile format
       const fullName = `${apiUser.firstName || ''} ${apiUser.lastName || ''}`.trim();
       const profileData: UserProfile = {
-        name: fullName,
+        firstName: apiUser.firstName || '',
+        lastName: apiUser.lastName || '',
         email: apiUser.email || '',
         gender: apiUser.gender || '',
-        age: age,
+        birthDate: apiUser.birthDate || '',
         height: apiUser.height?.toString() || '',
         weight: apiUser.weight?.toString() || '',
+        targetCalories: apiUser.targetCalories,
         activityLevel: apiUser.activityLevel || '',
         avatar: apiUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=random`,
-        authProvider: apiUser.authProvider || ''
+        authProvider: apiUser.authProvider || '',
+        password: '', // Never populate password from API
+        confirmPassword: ''
       };
 
       setFormData(profileData);
@@ -120,15 +112,19 @@ export const useProfile = () => {
       if (user) {
         const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
         const fallbackData: UserProfile = {
-          name: fullName,
+          firstName: user.firstName || '',
+          lastName: user.lastName || '',
           email: user.email || '',
           gender: user.gender || '',
-          age: '',
+          birthDate: user.birthDate || '',
           height: user.height?.toString() || '',
           weight: user.weight?.toString() || '',
           activityLevel: user.activityLevel || '',
           avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=random`,
-          authProvider: user.authProvider || ''
+          authProvider: user.authProvider || '',
+          targetCalories: null,
+          password: '',
+          confirmPassword: ''
         };
         
         setFormData(fallbackData);
@@ -138,25 +134,11 @@ export const useProfile = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchUserProfile]); // Only depend on fetchUserProfile
+  }, [fetchUserProfile, user, updateUser]); // Updated dependencies
 
   // Load profile data on mount
   useEffect(() => {
     loadProfileData();
-    
-    // Function to update calories when window regains focus
-    const handleFocus = () => {
-      const updatedCalories = getTargetCaloriesFromBMI();
-      setTargetCalories(updatedCalories);
-    };
-
-    // Add event listener for window focus
-    window.addEventListener('focus', handleFocus);
-
-    // Cleanup event listener on component unmount
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
   }, []); // Empty dependency array - only run on mount
 
   const handleInputChange = (field: string, value: string) => {
@@ -167,17 +149,44 @@ export const useProfile = () => {
   };
 
   const validateForm = (): { isValid: boolean; error?: string } => {
-    if (!formData.name.trim()) {
-      return { isValid: false, error: 'Nama tidak boleh kosong!' };
+    if (!formData.firstName.trim()) {
+      return { isValid: false, error: 'Nama depan tidak boleh kosong!' };
     }
     
-    if (formData.name.trim().length < 2) {
-      return { isValid: false, error: 'Nama harus memiliki minimal 2 karakter!' };
+    if (formData.firstName.trim().length < 2) {
+      return { isValid: false, error: 'Nama depan harus memiliki minimal 2 karakter!' };
     }
     
-    const age = parseInt(formData.age);
-    if (isNaN(age) || age < 1 || age > 120) {
-      return { isValid: false, error: 'Umur harus berupa angka antara 1-120 tahun!' };
+    if (!formData.birthDate) {
+      return { isValid: false, error: 'Tanggal lahir harus diisi!' };
+    }
+
+    // Validate birth date is not in the future
+    const birthDate = new Date(formData.birthDate);
+    const today = new Date();
+    if (birthDate > today) {
+      return { isValid: false, error: 'Tanggal lahir tidak boleh di masa depan!' };
+    }
+
+    // Validate age (must be at least 1 year old and max 120)
+    const age = today.getFullYear() - birthDate.getFullYear();
+    if (age < 1 || age > 120) {
+      return { isValid: false, error: 'Umur harus antara 1-120 tahun!' };
+    }
+
+    // Validate password if provided (only for local auth)
+    if (formData.authProvider === 'local' && formData.password) {
+      if (formData.password.length < 8) {
+        return { isValid: false, error: 'Password harus memiliki minimal 8 karakter!' };
+      }
+      
+      if (!formData.confirmPassword) {
+        return { isValid: false, error: 'Konfirmasi password harus diisi!' };
+      }
+      
+      if (formData.password !== formData.confirmPassword) {
+        return { isValid: false, error: 'Password dan konfirmasi password tidak cocok!' };
+      }
     }
     
     return { isValid: true };
@@ -188,35 +197,79 @@ export const useProfile = () => {
     setIsEditing(true);
   };
 
-  const handleSave = (): { success: boolean; error?: string } => {
+  const handleSave = async (): Promise<{ success: boolean; error?: string }> => {
     const validation = validateForm();
     if (!validation.isValid) {
       return { success: false, error: validation.error };
     }
 
     try {
-      // Note: Profile data is now managed via API only, not saved locally
-      // Update auth context if name or email changed
-      const currentFullName = user ? `${user.firstName} ${user.lastName}`.trim() : '';
-      if (user && (currentFullName !== formData.name || user.email !== formData.email)) {
-        // Split name back into firstName and lastName
-        const nameParts = formData.name.trim().split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
-        
+      setIsLoading(true);
+      setError(null);
+
+      // Prepare data for API
+      const updateData: any = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        gender: formData.gender,
+        birthDate: formData.birthDate ? new Date(formData.birthDate).toISOString() : formData.birthDate
+      };
+
+      // Add height and weight if they exist
+      if (formData.height) {
+        updateData.height = parseInt(formData.height);
+      }
+      if (formData.weight) {
+        updateData.weight = parseInt(formData.weight);
+      }
+      if (formData.targetCalories) {
+        updateData.targetCalories = formData.targetCalories;
+      }
+      if (formData.activityLevel) {
+        updateData.activityLevel = formData.activityLevel;
+      }
+
+      // Add password if provided (only for local auth)
+      if (formData.authProvider === 'local' && formData.password) {
+        updateData.password = formData.password;
+        updateData.confirmPassword = formData.confirmPassword;
+      }
+
+      // Debug: Log the data being sent to API
+      console.log('Sending profile update data:', updateData);
+      
+      // Call API to update profile
+      const response = await apiClient.updateUserProfile(updateData);
+      
+      // Update auth context with fresh data
+      if (user) {
         updateUser({
-          firstName: firstName,
-          lastName: lastName,
-          email: formData.email
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          gender: formData.gender,
+          birthDate: formData.birthDate,
+          height: formData.height ? parseInt(formData.height) : user.height,
+          weight: formData.weight ? parseInt(formData.weight) : user.weight,
+          activityLevel: formData.activityLevel || user.activityLevel
         });
       }
       
       setOriginalFormData({ ...formData });
       setIsEditing(false);
+      
+      // Clear password fields after save
+      setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+      
       return { success: true };
     } catch (error) {
       console.error('Error saving profile:', error);
-      return { success: false, error: 'Terjadi kesalahan saat menyimpan profil.' };
+      const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan saat menyimpan profil.';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -274,18 +327,21 @@ export const useProfile = () => {
       if (success) {
         // Reset component state
         setFormData({
-          name: '',
+          firstName: '',
+          lastName: '',
           email: '',
           gender: '',
-          age: '',
+          birthDate: '',
           height: '',
           weight: '',
           activityLevel: '',
           avatar: '',
-          authProvider: ''
+          authProvider: '',
+          targetCalories: null,
+          password: '',
+          confirmPassword: ''
         });
         setProfileImage(null);
-        setTargetCalories(2500);
         setIsEditing(false);
         return { success: true };
       } else {
@@ -307,7 +363,6 @@ export const useProfile = () => {
     // State
     isEditing,
     profileImage,
-    targetCalories,
     formData,
     originalFormData,
     isLoading,

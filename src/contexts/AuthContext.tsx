@@ -42,6 +42,7 @@ const isTokenExpiredOrNearExpiry = (token: string, bufferMinutes: number = 5): b
 
 // Types
 export interface User {
+  targetCalories: number | null
   id: string
   userAlias: string
   email: string
@@ -77,6 +78,8 @@ export interface RegisterData {
   name: string
   email: string
   password: string
+  birthDate?: string
+  gender?: string
 }
 
 // Create context
@@ -148,7 +151,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 updatedAt: '',
                 authProvider: '',
                 providerId: null,
-                avatar: null
+                avatar: null,
+                targetCalories: null
               })
             } else {
               // Token refresh failed, clear auth data
@@ -179,7 +183,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             updatedAt: '',
             authProvider: '',
             providerId: null,
-            avatar: null
+            avatar: null,
+            targetCalories: null
           })
         }
       } else {
@@ -206,7 +211,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { token, user: backendUser } = response.data
         
         // Store the complete backend user data directly
-        const userData: User = backendUser
+        const userData: User = {
+          ...backendUser,
+        }
         
         // Store user data and token in cookies
         setUserCookie(userData)
@@ -252,7 +259,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const registerData: RegisterRequest = {
         email: userData.email,
         password: userData.password,
-        fullName: userData.name
+        fullName: userData.name,
+        ...(userData.birthDate && { birthDate: userData.birthDate }),
+        ...(userData.gender && { gender: userData.gender })
       }
       
       const response = await apiService.register(registerData)
@@ -264,8 +273,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const newUser: User = backendUser
         
         setAuthTokenCookie(token)
-        
+        setUserCookie(newUser)
         setUser(newUser)
+
         
         // Redirect to dashboard after successful registration
         router.push(AUTH_PATHS.DASHBOARD)

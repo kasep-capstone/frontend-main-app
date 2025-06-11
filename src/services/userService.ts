@@ -15,6 +15,8 @@ export interface RegisterRequest {
   email: string
   password: string
   fullName: string
+  birthDate?: string
+  gender?: string
 }
 
 export interface BackendUser {
@@ -28,6 +30,7 @@ export interface BackendUser {
   gender: string | null
   height: number | null
   weight: number | null
+  targetCalories: number | null
   activityLevel: string | null
   createdAt: string
   updatedAt: string

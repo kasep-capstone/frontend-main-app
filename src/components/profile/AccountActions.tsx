@@ -36,7 +36,7 @@ export const AccountActions: React.FC<AccountActionsProps> = ({
               <span className="text-xs text-muted-foreground">Logout dari aplikasi ini</span>
             </div>
           </Button>
-          <Button 
+          {/* <Button 
             variant="outline" 
             className="w-full justify-start gap-3 h-12 hover:bg-red-50 hover:border-red-200 text-red-600 border-red-200" 
             onClick={onDeleteAppData}
@@ -46,7 +46,7 @@ export const AccountActions: React.FC<AccountActionsProps> = ({
               <span>Hapus Data Aplikasi</span>
               <span className="text-xs text-muted-foreground">Hapus semua data aplikasi, akun Google tetap aman</span>
             </div>
-          </Button>
+          </Button> */}
         </div>
       </CardContent>
     </Card>

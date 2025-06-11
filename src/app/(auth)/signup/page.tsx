@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, User, CheckCircle } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, User, CheckCircle, Calendar, Users } from 'lucide-react'
 import { FcGoogle } from 'react-icons/fc'
 import { cn } from '@/utils/utils'
 import { useAuth } from '@/contexts/AuthContext'
@@ -15,7 +15,9 @@ export default function RegisterPage() {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    birthDate: '',
+    gender: ''
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -45,6 +47,23 @@ export default function RegisterPage() {
       newErrors.email = 'Email wajib diisi'
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Format email tidak valid'
+    }
+
+    if (!formData.birthDate) {
+      newErrors.birthDate = 'Tanggal lahir wajib diisi'
+    } else {
+      const birthDate = new Date(formData.birthDate)
+      const today = new Date()
+      const age = today.getFullYear() - birthDate.getFullYear()
+      if (age < 13) {
+        newErrors.birthDate = 'Usia minimal 13 tahun'
+      } else if (age > 120) {
+        newErrors.birthDate = 'Tanggal lahir tidak valid'
+      }
+    }
+
+    if (!formData.gender) {
+      newErrors.gender = 'Jenis kelamin wajib dipilih'
     }
     
     if (!formData.password) {
@@ -95,7 +114,9 @@ export default function RegisterPage() {
       await register({
         name: formData.name,
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        birthDate: formData.birthDate,
+        gender: formData.gender
       })
       // Success handled by AuthContext (redirect, etc.)
     } catch (error: any) {
@@ -181,6 +202,50 @@ export default function RegisterPage() {
                 </div>
                 {errors.email && (
                   <p className="text-sm text-red-600">{errors.email}</p>
+                )}
+              </div>
+
+              {/* Birth Date Field */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Tanggal Lahir</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="date"
+                    value={formData.birthDate}
+                    onChange={(e) => handleInputChange('birthDate', e.target.value)}
+                    className={cn(
+                      "pl-10 h-12",
+                      errors.birthDate ? 'border-red-500 focus-visible:ring-red-500' : ''
+                    )}
+                    max={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+                {errors.birthDate && (
+                  <p className="text-sm text-red-600">{errors.birthDate}</p>
+                )}
+              </div>
+
+              {/* Gender Field */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Jenis Kelamin</label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <select
+                    value={formData.gender}
+                    onChange={(e) => handleInputChange('gender', e.target.value)}
+                    className={cn(
+                      "w-full pl-10 h-12 px-3 py-2 text-sm border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-input",
+                      errors.gender ? 'border-red-500 focus:ring-red-500' : ''
+                    )}
+                  >
+                    <option value="">Pilih jenis kelamin</option>
+                    <option value="male">Laki-laki</option>
+                    <option value="female">Perempuan</option>
+                  </select>
+                </div>
+                {errors.gender && (
+                  <p className="text-sm text-red-600">{errors.gender}</p>
                 )}
               </div>
 

@@ -203,6 +203,42 @@ class ApiClient {
 
     return this.handleResponse(response);
   }
+
+  // User Profile API Methods
+  async updateUserProfile(profileData: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    birthDate?: string;
+    gender?: 'male' | 'female';
+    height?: number;
+    weight?: number;
+    targetCalories?: number;
+    activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
+    userAlias?: string;
+    username?: string;
+    password?: string;
+    confirmPassword?: string;
+  }): Promise<any> {
+    // Remove empty fields for API, but keep confirmPassword if password is provided
+    const cleanedData = Object.fromEntries(
+      Object.entries(profileData).filter(([key, value]) => {
+        // Remove empty strings and null/undefined values
+        return value !== null && value !== undefined && value !== '';
+      })
+    );
+
+    // Debug: Log the cleaned data being sent
+    console.log('API Client - Cleaned data:', cleanedData);
+
+    const response = await fetch(`${this.baseURL}/user/profile`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(cleanedData)
+    });
+
+    return this.handleResponse(response);
+  }
 }
 
 export const apiClient = new ApiClient();
