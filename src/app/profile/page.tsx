@@ -7,9 +7,10 @@ import React from 'react';
 import { CustomModal } from '@/components/profile/CustomModal';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileSettings } from '@/components/profile/ProfileSettings';
-import { SocialMediaSection } from '@/components/profile/SocialMediaSection';
+// import { SocialMediaSection } from '@/components/profile/SocialMediaSection';
 import { AccountSection } from '@/components/profile/AccountSection';
 import { AccountActions } from '@/components/profile/AccountActions';
+import { ProtectedPageContent } from '@/components/auth/ProtectedPage';
 
 // Import custom hooks
 import { useModal } from '@/hooks/useModal';
@@ -21,8 +22,8 @@ export default function Profile() {
   const {
     isEditing,
     profileImage,
-    targetCalories,
     formData,
+    isLoading,
     handleInputChange,
     handleEditProfile,
     handleSave,
@@ -52,12 +53,17 @@ export default function Profile() {
   };
 
   // Profile save handler
-  const onSave = () => {
-    const result = handleSave();
-    if (result.success) {
-      showAlert('success', 'Berhasil', 'Profil berhasil disimpan!');
-    } else {
-      showAlert('error', 'Validasi Gagal', result.error || 'Gagal menyimpan profil.');
+  const onSave = async () => {
+    try {
+      const result = await handleSave();
+      if (result.success) {
+        showAlert('success', 'Berhasil', 'Profil berhasil disimpan!');
+      } else {
+        showAlert('error', 'Gagal Menyimpan', result.error || 'Gagal menyimpan profil.');
+      }
+    } catch (error) {
+      console.error('Error in onSave:', error);
+      showAlert('error', 'Terjadi Kesalahan', 'Terjadi kesalahan saat menyimpan profil.');
     }
   };
 
@@ -98,7 +104,7 @@ export default function Profile() {
         if (result.success) {
           showAlert('success', 'Logout Berhasil', 'Anda berhasil logout!\n\nSampai jumpa lagi! 👋');
           // Redirect to login page
-          // window.location.href = '/login';
+          window.location.href = '/signin';
         } else {
           showAlert('error', 'Logout Gagal', result.error || 'Terjadi kesalahan saat logout.');
         }
@@ -136,6 +142,7 @@ export default function Profile() {
 
   return (
     <>
+    <ProtectedPageContent>
       <MenuBarTop/>
       <div className="bg-background pt-16">
         <div className="max-w-md mx-auto px-4 pb-8">
@@ -144,7 +151,6 @@ export default function Profile() {
           <ProfileHeader
             profileImage={profileImage}
             formData={formData}
-            targetCalories={targetCalories}
             onImageUpload={triggerImageUpload}
           />
 
@@ -156,13 +162,14 @@ export default function Profile() {
             onSave={onSave}
             onCancel={handleCancel}
             onInputChange={handleInputChange}
+            isLoading={isLoading}
           />
 
           {/* Social Media Section */}
-          <SocialMediaSection
+          {/* <SocialMediaSection
             onConnectTwitter={handleConnectTwitter}
             onConnectInstagram={handleConnectInstagram}
-          />
+          /> */}
 
           {/* Account Integration */}
           <AccountSection formData={formData} />
@@ -203,6 +210,7 @@ export default function Profile() {
         onPromptChange={modal.onPromptChange}
         promptPlaceholder={modal.promptPlaceholder}
       />
+    </ProtectedPageContent>
     </>
   );
 }

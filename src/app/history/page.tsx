@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { DailyFood } from '@/types/dashboard';
 import { dailyFoodHistory } from '@/constants/dashboard-data';
+import { ProtectedPageContent } from '@/components/auth/ProtectedPage';
 
 export default function HistoryPage() {
   const router = useRouter();
@@ -124,15 +125,14 @@ export default function HistoryPage() {
 
   const totalCalories = filteredHistory.reduce((sum, food) => sum + food.calories, 0);
 
-  // Debug function to show current filter values
   const handleTimeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newValue = e.target.value;
     setSelectedTimeFilter(newValue);
-    console.log('Time filter changed to:', newValue);
   };
 
   return (
     <>
+    <ProtectedPageContent>
       <MenuBarTop />
       <div className="min-h-screen bg-background pt-16 pb-20">
         <div className="max-w-md mx-auto px-4">
@@ -353,6 +353,7 @@ export default function HistoryPage() {
       <div className="flex justify-center">
         <MenuBar />
       </div>
+    </ProtectedPageContent>
     </>
   );
 }

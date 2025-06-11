@@ -15,13 +15,22 @@ export interface ModalState {
 }
 
 export interface UserProfile {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  gender: string;
-  age: string;
+  gender: 'male' | 'female' | string;
+  birthDate: string;
+  height: string;
+  weight: string;
+  activityLevel: string;
+  avatar: string;
+  authProvider: string;
+  targetCalories: number | null;
+  password?: string; // For profile updates
+  confirmPassword?: string; // For password verification
 }
 
 export interface ProfileData extends UserProfile {
   profileImage: string | null;
-  targetCalories: number;
+  targetCalories: number | null;
 } 

@@ -277,3 +277,12 @@ export const formatDate = (dateString: string): string => {
     minute: '2-digit'
   });
 }; 
+
+export const getAge = (birthDate: string | null): number => {
+  if (!birthDate) return 0;
+  const today = new Date();
+  const birthDateObj = new Date(birthDate);
+  const age = today.getFullYear() - birthDateObj.getFullYear();
+  const monthDiff = today.getMonth() - birthDateObj.getMonth();
+  return age;
+};

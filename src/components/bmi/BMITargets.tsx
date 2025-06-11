@@ -21,9 +21,9 @@ export const BMITargets: React.FC<BMITargetsProps> = ({ idealTargets }) => {
             <span className="text-sm font-medium text-amber-800">Berat Badan Ideal</span>
           </div>
           <div className="text-xl font-bold text-amber-700">
-            {idealTargets.targetWeight} kg
+            {idealTargets.targetWeight || 0} kg
           </div>
-          <div className="text-xs text-amber-600">Range: {idealTargets.weightRange}</div>
+          <div className="text-xs text-amber-600">Range: {idealTargets.weightRange || 'N/A'}</div>
         </div>
        
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -31,7 +31,7 @@ export const BMITargets: React.FC<BMITargetsProps> = ({ idealTargets }) => {
             <Target className="w-4 h-4 text-green-600" />
             <span className="text-sm font-medium text-green-800">Target BMI</span>
           </div>
-          <div className="text-xl font-bold text-green-700">{idealTargets.targetBMI}</div>
+          <div className="text-xl font-bold text-green-700">{idealTargets.targetBMI || 'N/A'}</div>
           <div className="text-xs text-green-600">BMI Optimal</div>
         </div>
       </div>
@@ -43,7 +43,7 @@ export const BMITargets: React.FC<BMITargetsProps> = ({ idealTargets }) => {
             <span className="text-sm font-medium text-blue-800">Target Kalori</span>
           </div>
           <div className="text-xl font-bold text-blue-700">
-            {idealTargets.targetCalories.toLocaleString()}
+            {idealTargets.targetCalories?.toLocaleString() || '0'}
           </div>
           <div className="text-xs text-blue-600">kalori/hari</div>
         </div>
@@ -53,7 +53,7 @@ export const BMITargets: React.FC<BMITargetsProps> = ({ idealTargets }) => {
             <Clock className="w-4 h-4 text-yellow-600" />
             <span className="text-sm font-medium text-yellow-800">Estimasi Waktu</span>
           </div>
-          <div className="text-xl font-bold text-yellow-700">{idealTargets.timeEstimate}</div>
+          <div className="text-xl font-bold text-yellow-700">{idealTargets.timeEstimate || 'N/A'}</div>
           <div className="text-xs text-yellow-600">dengan konsistensi</div>
         </div>
       </div>

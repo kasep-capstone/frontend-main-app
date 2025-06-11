@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useBMIHistory } from '@/hooks/useBMIHistory';
 import Link from 'next/link';
+import { ProtectedPageContent } from '@/components/auth/ProtectedPage';
 
 export default function BMIHistoryPage() {
   const {
@@ -36,6 +37,7 @@ export default function BMIHistoryPage() {
 
   return (
     <>
+    <ProtectedPageContent>
       <MenuBarTop />
       <div className="min-h-screen bg-background pt-16 pb-20">
         <div className="max-w-md mx-auto px-4">
@@ -63,8 +65,8 @@ export default function BMIHistoryPage() {
                   <Activity className="w-4 h-4 text-amber-600" />
                   <span className="text-sm font-medium">BMI Rata-rata</span>
                 </div>
-                <div className="text-xl font-bold text-amber-600">{statistics.averageBMI}</div>
-                <div className="text-xs text-muted-foreground">Range: {statistics.minBMI} - {statistics.maxBMI}</div>
+                <div className="text-xl font-bold text-amber-600">{statistics.averageBMI || '0.0'}</div>
+                <div className="text-xs text-muted-foreground">Range: {statistics.minBMI || '0.0'} - {statistics.maxBMI || '0.0'}</div>
               </div>
               
               <div className="bg-card border border-border rounded-lg p-4 shadow-sm">
@@ -72,8 +74,8 @@ export default function BMIHistoryPage() {
                   <Scale className="w-4 h-4 text-orange-600" />
                   <span className="text-sm font-medium">Perubahan Berat</span>
                 </div>
-                <div className={`text-xl font-bold ${parseFloat(statistics.weightChange) > 0 ? 'text-red-600' : parseFloat(statistics.weightChange) < 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
-                  {parseFloat(statistics.weightChange) > 0 ? '+' : ''}{statistics.weightChange} kg
+                <div className={`text-xl font-bold ${parseFloat(statistics.weightChange || '0') > 0 ? 'text-red-600' : parseFloat(statistics.weightChange || '0') < 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                  {parseFloat(statistics.weightChange || '0') > 0 ? '+' : ''}{statistics.weightChange || '0'} kg
                 </div>
                 <div className="text-xs text-muted-foreground">dari awal pencatatan</div>
               </div>
@@ -89,18 +91,18 @@ export default function BMIHistoryPage() {
                   <span className="font-semibold text-amber-800">Target Progress</span>
                 </div>
                 <div className="text-sm text-amber-600">
-                  {goalsProgress.count} dari {goalsProgress.total} memiliki target
+                  {goalsProgress?.count || 0} dari {goalsProgress?.total || 0} memiliki target
                 </div>
               </div>
               <div className="mt-2">
                 <div className="w-full bg-amber-200 rounded-full h-2">
                   <div 
                     className="bg-amber-600 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${goalsProgress.percentage}%` }}
+                    style={{ width: `${goalsProgress?.percentage || 0}%` }}
                   ></div>
                 </div>
                 <div className="text-xs text-amber-700 mt-1">
-                  {goalsProgress.percentage}% pencatatan dengan target yang ditetapkan
+                  {goalsProgress?.percentage || 0}% pencatatan dengan target yang ditetapkan
                 </div>
               </div>
             </div>
@@ -126,8 +128,8 @@ export default function BMIHistoryPage() {
                     trend.direction === 'up' ? 'text-red-600' : 
                     trend.direction === 'down' ? 'text-green-600' : 'text-blue-600'
                   }`}>
-                    {trend.direction === 'up' ? 'Naik' : trend.direction === 'down' ? 'Turun' : 'Stabil'} {trend.value.toFixed(1)} 
-                    ({trend.percentage.toFixed(1)}%)
+                    {trend.direction === 'up' ? 'Naik' : trend.direction === 'down' ? 'Turun' : 'Stabil'} {trend.value?.toFixed(1) || '0.0'} 
+                    ({trend.percentage?.toFixed(1) || '0.0'}%)
                   </span>
                 </div>
               </div>
@@ -158,7 +160,18 @@ export default function BMIHistoryPage() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={exportHistory}
+                  onClick={async () => {
+                    try {
+                      await exportHistory();
+                    } catch (error) {
+                      console.error('Error exporting history:', error);
+                      if (error instanceof Error && error.message.includes('Authentication required')) {
+                        alert('Silakan login terlebih dahulu untuk export data BMI.');
+                      } else {
+                        alert('Gagal export data BMI. Silakan coba lagi.');
+                      }
+                    }
+                  }}
                   className="p-2 bg-amber-100 text-amber-600 rounded-md hover:bg-amber-200 transition-colors"
                 >
                   <Download className="w-4 h-4" />
@@ -210,6 +223,7 @@ export default function BMIHistoryPage() {
       <div className="flex justify-center mt-6">
         <MenuBar />
       </div>
+    </ProtectedPageContent>
     </>
   );
 }

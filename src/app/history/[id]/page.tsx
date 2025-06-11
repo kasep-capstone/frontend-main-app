@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { DailyFood } from '@/types/dashboard';
 import { dailyFoodHistory } from '@/constants/dashboard-data';
+import { ProtectedPageContent } from '@/components/auth/ProtectedPage';
 
 export default function FoodDetailPage() {
   const router = useRouter();
@@ -67,6 +68,7 @@ export default function FoodDetailPage() {
 
   return (
     <>
+    <ProtectedPageContent>
       <MenuBarTop />
       <div className="min-h-screen bg-background pt-16 pb-20">
         <div className="max-w-md mx-auto px-4">
@@ -347,6 +349,7 @@ export default function FoodDetailPage() {
       <div className="flex justify-center">
         <MenuBar />
       </div>
+    </ProtectedPageContent>
     </>
   );
 } 
