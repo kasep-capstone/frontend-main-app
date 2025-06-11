@@ -6,9 +6,11 @@ import {
   getIdealTargets, 
   getRecommendations, 
   getProgressRemaining,
-  ACTIVITY_LEVELS
+  ACTIVITY_LEVELS,
+  getAge
 } from '@/utils/bmi';
 import { BMIService } from '@/services/bmiService';
+import { getUserFromCookie } from '@/utils/auth-cookies';
 
 export const useBMI = () => {
   const [formData, setFormData] = useState<BMIFormData>({
@@ -46,17 +48,39 @@ export const useBMI = () => {
     loadActivityLevels();
   }, []);
 
+  // Load user data from cookie and set initial form data
+  useEffect(() => {
+    const userCookie = getUserFromCookie();
+    const age = getAge(userCookie?.birthDate);
+    const gender = userCookie?.gender;
+
+    // Always set age and gender from cookie if available
+    if (age && gender) {
+      setFormData(prev => ({
+        ...prev,
+        age: age.toString(),
+        gender: gender as 'male' | 'female'
+      }));
+    }
+  }, []);
+
   // Load latest record on mount
   useEffect(() => {
     const loadLatestRecord = async () => {
       try {
         const latestRecord = await BMIService.getLatestBMIRecord();
         if (latestRecord) {
+          // Get user data from cookie for age and gender
+          const userCookie = getUserFromCookie();
+          const cookieAge = getAge(userCookie?.birthDate);
+          const cookieGender = userCookie?.gender;
+
           setFormData({
             height: latestRecord.height.toString(),
             weight: latestRecord.weight.toString(),
-            age: latestRecord.age.toString(),
-            gender: latestRecord.gender,
+            // Use cookie data for age and gender instead of record data
+            age: cookieAge ? cookieAge.toString() : latestRecord.age.toString(),
+            gender: cookieGender ? (cookieGender as 'male' | 'female') : latestRecord.gender,
             activityLevel: latestRecord.activityLevel
           });
           setIsDataLoaded(true);
@@ -76,9 +100,12 @@ export const useBMI = () => {
         const calculatedResults = processFormData(formData);
         setResults(calculatedResults);
 
+        const userCookie = getUserFromCookie();
+        const gender = userCookie?.gender;
+        const age = getAge(userCookie?.birthDate);
+
         const height = parseFloat(formData.height);
         const weight = parseFloat(formData.weight);
-        const age = parseFloat(formData.age);
 
         // Get ideal targets (now uses local calculation)
         const loadIdealTargets = async () => {
@@ -87,7 +114,7 @@ export const useBMI = () => {
               height,
               weight,
               age,
-              gender: formData.gender,
+              gender,
               activityLevel: formData.activityLevel
             });
             

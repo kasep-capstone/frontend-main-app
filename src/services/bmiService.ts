@@ -23,8 +23,6 @@ export class BMIService {
         date: record.date, // Keep as string
         height: Math.round(record.height), // Convert to integer
         weight: Math.round(record.weight), // Convert to integer
-        age: Math.round(record.age), // Convert to integer
-        gender: record.gender,
         activityLevel: record.activityLevel,
         bmi: Math.round(record.bmi * 100) / 100, // Round to 2 decimal places
         category: record.category,

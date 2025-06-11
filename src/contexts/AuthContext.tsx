@@ -10,7 +10,8 @@ import {
   getAuthTokenFromCookie,
   setIntendedPathCookie,
   getIntendedPathFromCookie,
-  removeIntendedPathCookie
+  removeIntendedPathCookie,
+  setUserCookie
 } from '@/utils/auth-cookies'
 import { apiService, LoginRequest, RegisterRequest, BackendUser } from '@/services/userService'
 
@@ -208,7 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const userData: User = backendUser
         
         // Store user data and token in cookies
-        // setUserCookie(userData)
+        setUserCookie(userData)
         setAuthTokenCookie(token)
         
         setUser(userData)
