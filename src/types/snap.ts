@@ -1,4 +1,5 @@
 import { Recipe } from './recipe';
+import { ApiRecipe, ApiRecipeStep } from './api';
 
 export interface SnapResult {
   date: string;
@@ -8,13 +9,21 @@ export interface SnapResult {
   receipts: Recipe[];
 }
 
+// Complete API Response interface for storing all raw data
+export interface CompleteApiResult {
+  data: ApiRecipe[];
+  ingredients_detected: string[];
+  status: string;
+  capturedImage: string;
+  timestamp: string;
+}
+
 export interface RecipeRecommendationsProps {
   snapResult: SnapResult;
+  completeApiResult: CompleteApiResult | null;
   currentIndex: number;
   showNavButtons: boolean;
   scrollContainerRef: React.RefObject<HTMLDivElement>;
-  showDetails: boolean;
-  onShowDetailsChange: (show: boolean) => void;
-  onRecipeSelect: (recipe: Recipe) => void;
   onScrollToRecipe: (direction: 'left' | 'right') => void;
+  onImageClick: (imageData: { url: string; alt: string }) => void;
 } 

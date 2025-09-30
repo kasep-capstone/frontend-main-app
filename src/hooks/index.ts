@@ -17,5 +17,10 @@ export { useProfile } from './useProfile';
 // UI related hooks
 export { useModal } from './useModal';
 
+// New hooks
+export { useHistory } from './useHistory';
+export { useHistoryDetail } from './useHistoryDetail';
+export { useDashboard } from './useDashboard';
+
 // Type exports
 export type { SnapResult } from './useSnapResult'; 
